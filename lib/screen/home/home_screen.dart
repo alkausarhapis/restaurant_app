@@ -34,16 +34,26 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      // TODO: Implement search functionality
-                    },
-                    icon: const Icon(Icons.search),
-                    label: const Text("Cari Restoran"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColor.orange.color,
+                Hero(
+                  tag: 'search-bar',
+                  child: Material(
+                    color: Colors.transparent,
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/search');
+                        },
+                        icon: const Icon(Icons.search, size: 24),
+                        label: const Text(
+                          "Cari Restoran",
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          backgroundColor: AppColor.orange.color,
+                        ),
+                      ),
                     ),
                   ),
                 ),
