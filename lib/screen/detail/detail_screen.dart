@@ -38,6 +38,26 @@ class _DetailScreenState extends State<DetailScreen> {
             RestaurantDetailErrorState(error: var message) => Center(
               child: Text(message),
             ),
+            RestaurantDetailNoInternetState() => Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset('assets/no-internet.png', height: 150),
+                  const SizedBox(height: 16),
+                  const Text('Tidak ada koneksi internet'),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      context
+                          .read<RestaurantDetailProvider>()
+                          .fetchRestaurantDetail(widget.restaurantId);
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const Text("Coba Lagi"),
+                  ),
+                ],
+              ),
+            ),
             _ => const SizedBox(),
           };
         },

@@ -3,12 +3,16 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:restaurant_app/data/model/restaurant_detail_response.dart';
 import 'package:restaurant_app/data/model/restaurant_list_response.dart';
+import 'package:restaurant_app/data/model/restaurant_search_response.dart';
 
 class ApiService {
   static const String _baseUrl = 'https://restaurant-api.dicoding.dev/';
+  static const Duration timeLimit = Duration(seconds: 10);
 
   Future<RestaurantListResponse> getRestaurantList() async {
-    final response = await http.get(Uri.parse('$_baseUrl/list'));
+    final response = await http
+        .get(Uri.parse('$_baseUrl/list'))
+        .timeout(timeLimit);
     if (response.statusCode == 200) {
       return RestaurantListResponse.fromJson(jsonDecode(response.body));
     } else {
@@ -17,7 +21,9 @@ class ApiService {
   }
 
   Future<RestaurantDetailResponse> getRestaurantDetail(String id) async {
-    final response = await http.get(Uri.parse('$_baseUrl/detail/$id'));
+    final response = await http
+        .get(Uri.parse('$_baseUrl/detail/$id'))
+        .timeout(timeLimit);
     if (response.statusCode == 200) {
       return RestaurantDetailResponse.fromJson(jsonDecode(response.body));
     } else {
@@ -25,10 +31,12 @@ class ApiService {
     }
   }
 
-  Future<RestaurantListResponse> searchRestaurants(String query) async {
-    final response = await http.get(Uri.parse('$_baseUrl/search?q=$query'));
+  Future<RestaurantSearchResponse> searchRestaurants(String query) async {
+    final response = await http
+        .get(Uri.parse('$_baseUrl/search?q=$query'))
+        .timeout(timeLimit);
     if (response.statusCode == 200) {
-      return RestaurantListResponse.fromJson(jsonDecode(response.body));
+      return RestaurantSearchResponse.fromJson(jsonDecode(response.body));
     } else {
       throw Exception('Failed to search restaurants');
     }

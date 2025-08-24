@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:restaurant_app/data/api/api_service.dart';
-import 'package:restaurant_app/data/model/restaurant.dart';
 import 'package:restaurant_app/provider/detail/restaurant_detail_provider.dart';
 import 'package:restaurant_app/provider/home/restaurant_list_provider.dart';
+import 'package:restaurant_app/provider/search/restaurant_search_provider.dart';
 import 'package:restaurant_app/screen/detail/detail_screen.dart';
 import 'package:restaurant_app/screen/home/home_screen.dart';
 import 'package:restaurant_app/screen/search/search_screen.dart';
 import 'package:restaurant_app/static/navigation_route.dart';
 import 'package:restaurant_app/styles/theme/app_theme.dart';
-
-// TODO: provider & api services
 
 void main() {
   runApp(
@@ -24,6 +22,10 @@ void main() {
         ChangeNotifierProvider(
           create: (context) =>
               RestaurantListProvider(context.read<ApiService>()),
+        ),
+        ChangeNotifierProvider(
+          create: (context) =>
+              RestaurantSearchProvider(context.read<ApiService>()),
         ),
       ],
       child: const MainApp(),
