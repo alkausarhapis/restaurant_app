@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/widgets.dart';
 import 'package:restaurant_app/data/api/api_service.dart';
 import 'package:restaurant_app/static/restaurant_detail_result_state.dart';
@@ -23,7 +26,13 @@ class RestaurantDetailProvider extends ChangeNotifier {
         _state = RestaurantDetailLoadedState(restaurant.restaurant);
         notifyListeners();
       }
-    } on Exception catch (e) {
+    } on SocketException {
+      _state = RestaurantDetailNoInternetState();
+      notifyListeners();
+    } on TimeoutException {
+      _state = RestaurantDetailNoInternetState();
+      notifyListeners();
+    } catch (e) {
       _state = RestaurantDetailErrorState(e.toString());
       notifyListeners();
     }

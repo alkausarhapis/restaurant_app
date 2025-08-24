@@ -6,6 +6,8 @@ class RestaurantDetailNoneState extends RestaurantDetailResultState {}
 
 class RestaurantDetailResultLoading extends RestaurantDetailResultState {}
 
+class RestaurantDetailNoInternetState extends RestaurantDetailResultState {}
+
 class RestaurantDetailErrorState extends RestaurantDetailResultState {
   final String error;
   RestaurantDetailErrorState(this.error);
