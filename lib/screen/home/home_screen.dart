@@ -1,10 +1,28 @@
+import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:restaurant_app/data/model/restaurant.dart';
+import 'package:restaurant_app/static/navigation_route.dart';
+import 'package:restaurant_app/static/restaurant_list_result_state.dart';
+import 'package:restaurant_app/provider/home/restaurant_list_provider.dart';
 import 'package:restaurant_app/screen/home/restaurant_card_widget.dart';
 import 'package:restaurant_app/styles/colors/app_color.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+
+    Future.microtask(() {
+      context.read<RestaurantListProvider>().fetchRestaurantList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,22 +76,33 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                ListView.builder(
-                  itemCount: restaurantList.length,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemBuilder: (context, index) {
-                    final restaurant = restaurantList[index];
-                    return RestaurantCardWidget(
-                      restaurant: restaurant,
-                      onTap: () {
-                        Navigator.pushNamed(
-                          context,
-                          '/detail',
-                          arguments: restaurant,
-                        );
-                      },
-                    );
+                Consumer<RestaurantListProvider>(
+                  builder: (context, value, child) {
+                    return switch (value.resultState) {
+                      RestaurantListLoadingState() => const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                      RestaurantListLoadedState(data: var restaurantList) =>
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: restaurantList.length,
+                          itemBuilder: (context, index) {
+                            final restaurant = restaurantList[index];
+                            return RestaurantCardWidget(
+                              restaurant: restaurant,
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  NavigationRoute.detailRoute.name,
+                                  arguments: restaurant.id,
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      _ => const SizedBox(),
+                    };
                   },
                 ),
               ],

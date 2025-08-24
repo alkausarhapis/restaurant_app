@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:restaurant_app/data/api/api_service.dart';
 import 'package:restaurant_app/data/model/restaurant.dart';
+import 'package:restaurant_app/provider/detail/restaurant_detail_provider.dart';
+import 'package:restaurant_app/provider/home/restaurant_list_provider.dart';
 import 'package:restaurant_app/screen/detail/detail_screen.dart';
 import 'package:restaurant_app/screen/home/home_screen.dart';
 import 'package:restaurant_app/screen/search/search_screen.dart';
@@ -9,7 +13,22 @@ import 'package:restaurant_app/styles/theme/app_theme.dart';
 // TODO: provider & api services
 
 void main() {
-  runApp(const MainApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        Provider(create: (context) => ApiService()),
+        ChangeNotifierProvider(
+          create: (context) =>
+              RestaurantDetailProvider(context.read<ApiService>()),
+        ),
+        ChangeNotifierProvider(
+          create: (context) =>
+              RestaurantListProvider(context.read<ApiService>()),
+        ),
+      ],
+      child: const MainApp(),
+    ),
+  );
 }
 
 class MainApp extends StatelessWidget {
@@ -25,8 +44,7 @@ class MainApp extends StatelessWidget {
       routes: {
         NavigationRoute.mainRoute.name: (context) => const HomeScreen(),
         NavigationRoute.detailRoute.name: (context) => DetailScreen(
-          /// [ModalRoute] is used to retrieve the arguments passed to the route
-          restaurant: ModalRoute.of(context)?.settings.arguments as Restaurant,
+          restaurantId: ModalRoute.of(context)?.settings.arguments as String,
         ),
         NavigationRoute.searchRoute.name: (context) => const SearchScreen(),
       },
