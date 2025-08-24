@@ -53,10 +53,10 @@ class _SearchScreenState extends State<SearchScreen> {
                         .read<RestaurantSearchProvider>()
                         .searchRestaurants(v),
                     decoration: const InputDecoration(
-                      hintText: 'Search...',
+                      hintText: 'Cari restoran...',
                       prefixIcon: Icon(Icons.search),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                        borderRadius: BorderRadius.all(Radius.circular(100)),
                       ),
                     ),
                   ),
@@ -91,7 +91,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         ),
 
                       RestaurantListEmptyState() => const Center(
-                        child: Text('No restaurants found'),
+                        child: Text('Restoran tidak ditemukan'),
                       ),
 
                       RestaurantListErrorState() => Center(
@@ -120,7 +120,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       ),
 
                       RestaurantListNoneState() => const Center(
-                        child: Text('Type something to search'),
+                        child: Text('Mulai cari restoran favoritmu!'),
                       ),
                     };
                   },
