@@ -1,5 +1,5 @@
 import 'package:restaurant_app/data/model/detail/category.dart';
-import 'package:restaurant_app/data/model/detail/menus.dart';
+import 'package:restaurant_app/data/model/detail/menu.dart';
 import 'package:restaurant_app/data/model/review/customer_review.dart';
 
 class RestaurantDetail {
@@ -11,7 +11,7 @@ class RestaurantDetail {
   final String pictureId;
   final double rating;
   final List<CategoryRestaurant> categories;
-  final Menus menus;
+  final Menu menu;
   final List<CustomerReview> customerReviews;
 
   RestaurantDetail({
@@ -23,7 +23,7 @@ class RestaurantDetail {
     required this.pictureId,
     required this.rating,
     required this.categories,
-    required this.menus,
+    required this.menu,
     required this.customerReviews,
   });
 
@@ -39,7 +39,7 @@ class RestaurantDetail {
       categories: (json['categories'] as List? ?? [])
           .map((e) => CategoryRestaurant.fromJson(e as Map<String, dynamic>))
           .toList(),
-      menus: Menus.fromJson(json['menus'] as Map<String, dynamic>? ?? const {}),
+      menu: Menu.fromJson(json['menu'] as Map<String, dynamic>? ?? const {}),
       customerReviews: (json['customerReviews'] as List? ?? [])
           .map((e) => CustomerReview.fromJson(e as Map<String, dynamic>))
           .toList(),
