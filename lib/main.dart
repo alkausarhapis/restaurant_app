@@ -12,7 +12,7 @@ import 'package:restaurant_app/screen/search/search_screen.dart';
 import 'package:restaurant_app/static/navigation_route.dart';
 import 'package:restaurant_app/styles/theme/app_theme.dart';
 
-// TODO: Finaliasi kode (cek comment & redundant code) & Readme
+// TODO: Finaliasi kode (cek comment & redundant import) & Readme
 
 void main() {
   runApp(
