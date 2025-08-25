@@ -105,6 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         RestaurantListLoadingState() => const Center(
                           child: CircularProgressIndicator(),
                         ),
+
                         RestaurantListLoadedState(data: var restaurantList) =>
                           ListView.builder(
                             shrinkWrap: true,
@@ -124,6 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               );
                             },
                           ),
+
                         RestaurantListNoInternetState() => Column(
                           children: [
                             Image.asset('assets/no-internet.png', height: 150),

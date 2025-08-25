@@ -1,4 +1,4 @@
-import 'package:restaurant_app/data/model/menu_item.dart';
+import 'package:restaurant_app/data/model/detail/menu_item.dart';
 
 class Menus {
   final List<MenuItem> foods;

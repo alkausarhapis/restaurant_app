@@ -5,14 +5,12 @@ import 'package:restaurant_app/provider/detail/restaurant_detail_provider.dart';
 import 'package:restaurant_app/provider/home/restaurant_list_provider.dart';
 import 'package:restaurant_app/provider/search/restaurant_search_provider.dart';
 import 'package:restaurant_app/provider/theme/theme_provider.dart';
-import 'package:restaurant_app/screen/detail/add_review_screen.dart';
+import 'package:restaurant_app/screen/detail/review/add_review_screen.dart';
 import 'package:restaurant_app/screen/detail/detail_screen.dart';
 import 'package:restaurant_app/screen/home/home_screen.dart';
 import 'package:restaurant_app/screen/search/search_screen.dart';
 import 'package:restaurant_app/static/navigation_route.dart';
 import 'package:restaurant_app/styles/theme/app_theme.dart';
-
-// TODO: Finaliasi kode (cek comment & redundant import) & Readme
 
 void main() {
   runApp(

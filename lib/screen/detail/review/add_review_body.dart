@@ -48,7 +48,7 @@ class _AddReviewBodyState extends State<AddReviewBody> {
               style: TextStyle(color: Colors.white),
             ),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
+            duration: Duration(seconds: 3),
             behavior: SnackBarBehavior.floating,
             margin: EdgeInsets.all(16),
             shape: RoundedRectangleBorder(
@@ -56,7 +56,7 @@ class _AddReviewBodyState extends State<AddReviewBody> {
             ),
           ),
         );
-        Navigator.pop(context, true); // kirim true agar detail bisa refresh
+        Navigator.pop(context, true);
       }
     }
   }

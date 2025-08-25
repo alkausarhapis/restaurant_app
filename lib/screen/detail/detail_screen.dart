@@ -33,11 +33,14 @@ class _DetailScreenState extends State<DetailScreen> {
             RestaurantDetailResultLoading() => const Center(
               child: CircularProgressIndicator(),
             ),
+
             RestaurantDetailLoadedState(data: var restaurant) =>
               BodyOfDetailScreenWidget(restaurant: restaurant),
+
             RestaurantDetailErrorState(error: var message) => Center(
               child: Text(message),
             ),
+
             RestaurantDetailNoInternetState() => Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -58,6 +61,7 @@ class _DetailScreenState extends State<DetailScreen> {
                 ],
               ),
             ),
+
             _ => const SizedBox(),
           };
         },

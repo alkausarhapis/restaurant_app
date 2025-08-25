@@ -1,4 +1,4 @@
-import 'package:restaurant_app/data/model/customer_review.dart';
+import 'package:restaurant_app/data/model/review/customer_review.dart';
 
 class RestaurantReviewResponse {
   final bool error;
