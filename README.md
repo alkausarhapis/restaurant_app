@@ -2,6 +2,8 @@
 
 Aplikasi Flutter untuk menampilkan daftar restoran, detail restoran, pencarian, dan fitur ulasan dengan data dari [Restaurant API Dicoding](https://restaurant-api.dicoding.dev/).
 
+> [Download demo apk disini](https://drive.google.com/file/d/1YL7dm6hHxh6qBoo4BekIol2-Tlfnpl5l/view?usp=sharing)
+
 ## ✨ Features
 
 ### **Daftar Restoran 📃**
