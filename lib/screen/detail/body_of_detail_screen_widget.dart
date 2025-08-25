@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:restaurant_app/data/model/restaurant_detail.dart';
+import 'package:restaurant_app/data/model/detail/restaurant_detail.dart';
 import 'package:restaurant_app/provider/detail/restaurant_detail_provider.dart';
 import 'package:restaurant_app/screen/detail/section_card_widget.dart';
 import 'package:restaurant_app/static/navigation_route.dart';
@@ -270,8 +270,8 @@ class BodyOfDetailScreenWidget extends StatelessWidget {
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(
+                onPressed: () async {
+                  final posted = await Navigator.pushNamed(
                     context,
                     NavigationRoute.addReviewRoute.name,
                     arguments: {
@@ -279,6 +279,15 @@ class BodyOfDetailScreenWidget extends StatelessWidget {
                       'restaurantName': restaurant.name,
                     },
                   );
+
+                  if (posted == true) {
+                    if (context.mounted) {
+                      Provider.of<RestaurantDetailProvider>(
+                        context,
+                        listen: false,
+                      ).fetchRestaurantDetail(restaurant.id);
+                    }
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
