@@ -18,6 +18,7 @@ class _DetailScreenState extends State<DetailScreen> {
     super.initState();
 
     Future.microtask(() {
+      if (!mounted) return;
       context.read<RestaurantDetailProvider>().fetchRestaurantDetail(
         widget.restaurantId,
       );
@@ -28,7 +29,7 @@ class _DetailScreenState extends State<DetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Consumer<RestaurantDetailProvider>(
-        builder: (context, value, child) {
+        builder: (context, value, _) {
           return switch (value.state) {
             RestaurantDetailResultLoading() => const Center(
               child: CircularProgressIndicator(),

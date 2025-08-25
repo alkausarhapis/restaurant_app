@@ -1,11 +1,11 @@
-import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:restaurant_app/provider/home/restaurant_list_provider.dart';
 import 'package:restaurant_app/provider/search/restaurant_search_provider.dart';
 import 'package:restaurant_app/provider/theme/theme_provider.dart';
+import 'package:restaurant_app/screen/home/restaurant_card_widget.dart';
 import 'package:restaurant_app/static/navigation_route.dart';
 import 'package:restaurant_app/static/restaurant_list_result_state.dart';
-import 'package:restaurant_app/provider/home/restaurant_list_provider.dart';
-import 'package:restaurant_app/screen/home/restaurant_card_widget.dart';
 import 'package:restaurant_app/styles/colors/app_color.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -21,7 +21,9 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
 
     Future.microtask(() {
-      context.read<RestaurantListProvider>().fetchRestaurantList();
+      if (mounted) {
+        context.read<RestaurantListProvider>().fetchRestaurantList();
+      }
     });
   }
 
@@ -80,10 +82,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/search').then((_) {
-                              context.read<RestaurantSearchProvider>().reset();
-                            });
+                          onPressed: () async {
+                            final searchProvider = context
+                                .read<RestaurantSearchProvider>();
+                            await Navigator.pushNamed(context, '/search');
+                            searchProvider.reset();
                           },
                           icon: const Icon(Icons.search, size: 24),
                           label: const Text(
@@ -100,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 16),
                   Consumer<RestaurantListProvider>(
-                    builder: (context, value, child) {
+                    builder: (context, value, _) {
                       return switch (value.resultState) {
                         RestaurantListLoadingState() => const Center(
                           child: CircularProgressIndicator(),

@@ -32,32 +32,33 @@ class _AddReviewBodyState extends State<AddReviewBody> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    await context.read<RestaurantReviewProvider>().submitReview(
+    final provider = context.read<RestaurantReviewProvider>();
+    await provider.submitReview(
       restaurantId: widget.restaurantId,
       reviewerName: _nameController.text,
       reviewText: _reviewController.text,
     );
 
-    final state = context.read<RestaurantReviewProvider>().resultState;
+    if (!mounted) return;
+
+    final state = provider.resultState;
     if (state is ReviewSubmitSuccessState) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Review berhasil terkirim!',
-              style: TextStyle(color: Colors.white),
-            ),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
-            behavior: SnackBarBehavior.floating,
-            margin: EdgeInsets.all(16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(8)),
-            ),
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Review berhasil terkirim!',
+            style: TextStyle(color: Colors.white),
           ),
-        );
-        Navigator.pop(context, true);
-      }
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+          ),
+        ),
+      );
+      Navigator.pop(context, true);
     }
   }
 
@@ -114,7 +115,7 @@ class _AddReviewBodyState extends State<AddReviewBody> {
                 const SizedBox(height: 16),
 
                 Consumer<RestaurantReviewProvider>(
-                  builder: (context, value, child) {
+                  builder: (context, value, _) {
                     final isLoading =
                         value.resultState is ReviewSubmittingState;
 

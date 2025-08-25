@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import 'package:restaurant_app/data/model/detail/restaurant_detail.dart';
 import 'package:restaurant_app/provider/detail/restaurant_detail_provider.dart';
 import 'package:restaurant_app/screen/detail/section_card_widget.dart';
@@ -96,7 +95,7 @@ class BodyOfDetailScreenWidget extends StatelessWidget {
         ),
 
         Consumer<RestaurantDetailProvider>(
-          builder: (context, value, child) {
+          builder: (context, value, _) {
             return switch (value.state) {
               RestaurantDetailResultLoading() => const SliverToBoxAdapter(
                 child: Padding(
@@ -161,7 +160,7 @@ class BodyOfDetailScreenWidget extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (restaurantList.menus.foods.isNotEmpty) ...[
+                        if (restaurantList.menu.foods.isNotEmpty) ...[
                           const SizedBox(height: 8),
                           Text(
                             'Makanan',
@@ -170,7 +169,7 @@ class BodyOfDetailScreenWidget extends StatelessWidget {
                           const SizedBox(height: 8),
                           Wrap(
                             spacing: 8,
-                            children: restaurantList.menus.foods
+                            children: restaurantList.menu.foods
                                 .map(
                                   (m) => Chip(
                                     label: Text(m.name),
@@ -184,7 +183,7 @@ class BodyOfDetailScreenWidget extends StatelessWidget {
                           ),
                           const SizedBox(height: 16),
                         ],
-                        if (restaurantList.menus.drinks.isNotEmpty) ...[
+                        if (restaurantList.menu.drinks.isNotEmpty) ...[
                           Text(
                             'Minuman',
                             style: Theme.of(context).textTheme.titleMedium,
@@ -192,7 +191,7 @@ class BodyOfDetailScreenWidget extends StatelessWidget {
                           const SizedBox(height: 8),
                           Wrap(
                             spacing: 8,
-                            children: restaurantList.menus.drinks
+                            children: restaurantList.menu.drinks
                                 .map(
                                   (m) => Chip(
                                     label: Text(m.name),
