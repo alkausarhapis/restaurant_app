@@ -39,7 +39,7 @@ class RestaurantDetail {
       categories: (json['categories'] as List? ?? [])
           .map((e) => CategoryRestaurant.fromJson(e as Map<String, dynamic>))
           .toList(),
-      menu: Menu.fromJson(json['menu'] as Map<String, dynamic>? ?? const {}),
+      menu: Menu.fromJson(json['menus'] as Map<String, dynamic>? ?? const {}),
       customerReviews: (json['customerReviews'] as List? ?? [])
           .map((e) => CustomerReview.fromJson(e as Map<String, dynamic>))
           .toList(),
