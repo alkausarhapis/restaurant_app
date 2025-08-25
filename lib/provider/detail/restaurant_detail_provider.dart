@@ -21,19 +21,16 @@ class RestaurantDetailProvider extends ChangeNotifier {
 
       if (restaurant.error) {
         _state = RestaurantDetailErrorState(restaurant.message);
-        notifyListeners();
       } else {
         _state = RestaurantDetailLoadedState(restaurant.restaurant);
-        notifyListeners();
       }
     } on SocketException {
       _state = RestaurantDetailNoInternetState();
-      notifyListeners();
     } on TimeoutException {
       _state = RestaurantDetailNoInternetState();
-      notifyListeners();
     } catch (e) {
       _state = RestaurantDetailErrorState(e.toString());
+    } finally {
       notifyListeners();
     }
   }
