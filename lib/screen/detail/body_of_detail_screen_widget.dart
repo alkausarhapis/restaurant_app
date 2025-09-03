@@ -4,7 +4,6 @@ import 'package:restaurant_app/data/model/detail/restaurant_detail.dart';
 import 'package:restaurant_app/provider/detail/restaurant_detail_provider.dart';
 import 'package:restaurant_app/screen/detail/section_card_widget.dart';
 import 'package:restaurant_app/static/navigation_route.dart';
-import 'package:restaurant_app/static/restaurant_detail_result_state.dart';
 import 'package:restaurant_app/styles/colors/app_color.dart';
 
 class BodyOfDetailScreenWidget extends StatelessWidget {
@@ -94,173 +93,145 @@ class BodyOfDetailScreenWidget extends StatelessWidget {
           ]),
         ),
 
-        Consumer<RestaurantDetailProvider>(
-          builder: (context, value, _) {
-            return switch (value.state) {
-              RestaurantDetailResultLoading() => const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              ),
-
-              RestaurantDetailErrorState(error: var msg) => SliverToBoxAdapter(
-                child: SectionCardWidget(
-                  title: 'Gagal memuat detail',
-                  child: Text(msg),
-                ),
-              ),
-
-              RestaurantDetailLoadedState(data: var restaurantList) => SliverList(
-                delegate: SliverChildListDelegate([
-                  if (restaurantList.address.isNotEmpty) ...[
-                    SectionCardWidget(
-                      title: 'Alamat',
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.only(top: 2),
-                            child: Icon(
-                              Icons.place,
-                              size: 18,
-                              color: Colors.red,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              '${restaurantList.address}, ${restaurantList.city}',
-                            ),
-                          ),
-                        ],
-                      ),
+        SliverList(
+          delegate: SliverChildListDelegate([
+            if (restaurant.address.isNotEmpty) ...[
+              SectionCardWidget(
+                title: 'Alamat',
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(top: 2),
+                      child: Icon(Icons.place, size: 18, color: Colors.red),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text('${restaurant.address}, ${restaurant.city}'),
                     ),
                   ],
+                ),
+              ),
+            ],
 
-                  if (restaurantList.categories.isNotEmpty) ...[
-                    SectionCardWidget(
-                      title: 'Kategori',
-                      child: Wrap(
-                        spacing: 8,
-                        children: restaurantList.categories
-                            .map(
-                              (c) => Chip(
-                                side: BorderSide(color: AppColor.orange.color),
-                                label: Text(c.name),
+            if (restaurant.categories.isNotEmpty) ...[
+              SectionCardWidget(
+                title: 'Kategori',
+                child: Wrap(
+                  spacing: 8,
+                  children: restaurant.categories
+                      .map(
+                        (c) => Chip(
+                          side: BorderSide(color: AppColor.orange.color),
+                          label: Text(c.name),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+            ],
+
+            SectionCardWidget(
+              title: 'Menu',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (restaurant.menu.foods.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Makanan',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: restaurant.menu.foods
+                          .map(
+                            (m) => Chip(
+                              label: Text(m.name),
+                              side: BorderSide.none,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.secondaryContainer,
+                            ),
+                          )
+                          .toList(),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  if (restaurant.menu.drinks.isNotEmpty) ...[
+                    Text(
+                      'Minuman',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: restaurant.menu.drinks
+                          .map(
+                            (m) => Chip(
+                              label: Text(m.name),
+                              side: BorderSide.none,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.secondaryContainer,
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            SectionCardWidget(
+              title: 'Ulasan Pelanggan',
+              child: restaurant.customerReviews.isEmpty
+                  ? const Text('Belum ada ulasan.')
+                  : Column(
+                      children: restaurant.customerReviews
+                          .map(
+                            (r) => ListTile(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              leading: CircleAvatar(
+                                backgroundColor: AppColor.orange.color
+                                    .withValues(alpha: 0.2),
+                                child: Text(
+                                  r.name.isNotEmpty
+                                      ? r.name[0].toUpperCase()
+                                      : '?',
+                                  style: TextStyle(
+                                    color: AppColor.orange.color,
+                                  ),
+                                ),
                               ),
-                            )
-                            .toList(),
-                      ),
-                    ),
-                  ],
-
-                  SectionCardWidget(
-                    title: 'Menu',
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (restaurantList.menu.foods.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            'Makanan',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 8,
-                            children: restaurantList.menu.foods
-                                .map(
-                                  (m) => Chip(
-                                    label: Text(m.name),
-                                    side: BorderSide.none,
-                                    backgroundColor: Theme.of(
-                                      context,
-                                    ).colorScheme.secondaryContainer,
-                                  ),
-                                )
-                                .toList(),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                        if (restaurantList.menu.drinks.isNotEmpty) ...[
-                          Text(
-                            'Minuman',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 8,
-                            children: restaurantList.menu.drinks
-                                .map(
-                                  (m) => Chip(
-                                    label: Text(m.name),
-                                    side: BorderSide.none,
-                                    backgroundColor: Theme.of(
-                                      context,
-                                    ).colorScheme.secondaryContainer,
-                                  ),
-                                )
-                                .toList(),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-
-                  SectionCardWidget(
-                    title: 'Ulasan Pelanggan',
-                    child: restaurantList.customerReviews.isEmpty
-                        ? const Text('Belum ada ulasan.')
-                        : Column(
-                            children: restaurantList.customerReviews
-                                .map(
-                                  (r) => ListTile(
-                                    dense: true,
-                                    contentPadding: EdgeInsets.zero,
-                                    leading: CircleAvatar(
-                                      backgroundColor: AppColor.orange.color
-                                          .withValues(alpha: 0.2),
-                                      child: Text(
-                                        r.name.isNotEmpty
-                                            ? r.name[0].toUpperCase()
-                                            : '?',
-                                        style: TextStyle(
-                                          color: AppColor.orange.color,
+                              title: Row(
+                                children: [
+                                  Text(r.name),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    r.date,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.outline,
                                         ),
-                                      ),
-                                    ),
-                                    title: Row(
-                                      children: [
-                                        Text(r.name),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          r.date,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .labelSmall
-                                              ?.copyWith(
-                                                color: Theme.of(
-                                                  context,
-                                                ).colorScheme.outline,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                    subtitle: Text(r.review),
                                   ),
-                                )
-                                .toList(),
-                          ),
-                  ),
+                                ],
+                              ),
+                              subtitle: Text(r.review),
+                            ),
+                          )
+                          .toList(),
+                    ),
+            ),
 
-                  const SizedBox(height: 8),
-                ]),
-              ),
-
-              _ => const SliverToBoxAdapter(child: SizedBox.shrink()),
-            };
-          },
+            const SizedBox(height: 8),
+          ]),
         ),
 
         SliverToBoxAdapter(

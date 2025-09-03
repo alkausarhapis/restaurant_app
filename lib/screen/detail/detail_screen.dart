@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:restaurant_app/provider/detail/restaurant_detail_provider.dart';
 import 'package:restaurant_app/screen/detail/body_of_detail_screen_widget.dart';
-import 'package:restaurant_app/static/restaurant_detail_result_state.dart';
 
 class DetailScreen extends StatefulWidget {
   final String restaurantId;
@@ -17,8 +16,7 @@ class _DetailScreenState extends State<DetailScreen> {
   void initState() {
     super.initState();
 
-    Future.microtask(() {
-      if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<RestaurantDetailProvider>().fetchRestaurantDetail(
         widget.restaurantId,
       );
@@ -30,19 +28,19 @@ class _DetailScreenState extends State<DetailScreen> {
     return Scaffold(
       body: Consumer<RestaurantDetailProvider>(
         builder: (context, value, _) {
-          return switch (value.state) {
-            RestaurantDetailResultLoading() => const Center(
-              child: CircularProgressIndicator(),
-            ),
+          final state = value.state;
 
-            RestaurantDetailLoadedState(data: var restaurant) =>
-              BodyOfDetailScreenWidget(restaurant: restaurant),
+          if (state.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-            RestaurantDetailErrorState(error: var message) => Center(
-              child: Text(message),
-            ),
+          if (state.isSuccess) {
+            final restaurant = state.data!;
+            return BodyOfDetailScreenWidget(restaurant: restaurant);
+          }
 
-            RestaurantDetailNoInternetState() => Center(
+          if (state.isNoInternet) {
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -61,10 +59,14 @@ class _DetailScreenState extends State<DetailScreen> {
                   ),
                 ],
               ),
-            ),
+            );
+          }
 
-            _ => const SizedBox(),
-          };
+          if (state.isError) {
+            return Center(child: Text(state.message ?? 'Terjadi kesalahan'));
+          }
+
+          return const SizedBox();
         },
       ),
     );

@@ -3,37 +3,35 @@ import 'dart:io';
 
 import 'package:flutter/widgets.dart';
 import 'package:restaurant_app/data/api/api_service.dart';
-import 'package:restaurant_app/static/restaurant_list_result_state.dart';
+import 'package:restaurant_app/data/model/restaurant.dart';
+import 'package:restaurant_app/static/global_result_state.dart';
 
 class RestaurantListProvider extends ChangeNotifier {
   final ApiService _apiServices;
   RestaurantListProvider(this._apiServices);
 
-  RestaurantListResultState _resultState = RestaurantListNoneState();
-  RestaurantListResultState get resultState => _resultState;
+  ResultState<List<Restaurant>> _resultState = ResultState.none();
+  ResultState<List<Restaurant>> get resultState => _resultState;
 
   Future<void> fetchRestaurantList() async {
     try {
-      _resultState = RestaurantListLoadingState();
+      _resultState = ResultState.loading();
       notifyListeners();
 
       final restaurantList = await _apiServices.getRestaurantList();
 
       if (restaurantList.error) {
-        _resultState = RestaurantListErrorState(restaurantList.message);
-        notifyListeners();
+        _resultState = ResultState.error(restaurantList.message);
       } else {
-        _resultState = RestaurantListLoadedState(restaurantList.restaurants);
-        notifyListeners();
+        _resultState = ResultState.success(restaurantList.restaurants);
       }
     } on SocketException {
-      _resultState = RestaurantListNoInternetState();
-      notifyListeners();
+      _resultState = ResultState.noInternet();
     } on TimeoutException {
-      _resultState = RestaurantListNoInternetState();
-      notifyListeners();
+      _resultState = ResultState.noInternet();
     } catch (e) {
-      _resultState = RestaurantListErrorState(e.toString());
+      _resultState = ResultState.error(e.toString());
+    } finally {
       notifyListeners();
     }
   }

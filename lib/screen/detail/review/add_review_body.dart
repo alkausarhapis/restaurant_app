@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:restaurant_app/provider/detail/restaurant_review_provider.dart';
-import 'package:restaurant_app/static/review_submit_state.dart';
 import 'package:restaurant_app/styles/colors/app_color.dart';
 
 class AddReviewBody extends StatefulWidget {
@@ -41,8 +40,8 @@ class _AddReviewBodyState extends State<AddReviewBody> {
 
     if (!mounted) return;
 
-    final state = provider.resultState;
-    if (state is ReviewSubmitSuccessState) {
+    final state = provider.state;
+    if (state.isSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -116,12 +115,9 @@ class _AddReviewBodyState extends State<AddReviewBody> {
 
                 Consumer<RestaurantReviewProvider>(
                   builder: (context, value, _) {
-                    final isLoading =
-                        value.resultState is ReviewSubmittingState;
-
-                    final errorText =
-                        value.resultState is ReviewSubmitErrorState
-                        ? (value.resultState as ReviewSubmitErrorState).message
+                    final isLoading = value.state.isLoading;
+                    final errorText = value.state.isError
+                        ? (value.state.message ?? '')
                         : null;
 
                     return Column(
@@ -147,7 +143,7 @@ class _AddReviewBodyState extends State<AddReviewBody> {
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                         ),
-                        if (errorText != null) ...[
+                        if (errorText != null && errorText.isNotEmpty) ...[
                           const SizedBox(height: 8),
                           Text(
                             errorText,

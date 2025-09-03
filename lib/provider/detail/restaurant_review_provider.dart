@@ -3,13 +3,15 @@ import 'dart:io';
 
 import 'package:flutter/widgets.dart';
 import 'package:restaurant_app/data/api/api_service.dart';
-import 'package:restaurant_app/static/review_submit_state.dart';
+import 'package:restaurant_app/data/model/review/customer_review.dart';
+import 'package:restaurant_app/static/global_result_state.dart';
 
 class RestaurantReviewProvider extends ChangeNotifier {
   final ApiService _apiService;
   RestaurantReviewProvider(this._apiService);
 
-  ReviewSubmitState resultState = ReviewIdleState();
+  ResultState<List<CustomerReview>> _state = ResultState.none();
+  ResultState<List<CustomerReview>> get state => _state;
 
   Future<void> submitReview({
     required String restaurantId,
@@ -20,12 +22,12 @@ class RestaurantReviewProvider extends ChangeNotifier {
     final review = reviewText.trim();
 
     if (name.isEmpty || review.isEmpty) {
-      resultState = ReviewSubmitErrorState('Nama dan ulasan wajib diisi');
+      _state = ResultState.error('Nama dan ulasan wajib diisi');
       notifyListeners();
       return;
     }
 
-    resultState = ReviewSubmittingState();
+    _state = ResultState.loading();
     notifyListeners();
 
     try {
@@ -34,23 +36,25 @@ class RestaurantReviewProvider extends ChangeNotifier {
         name: name,
         review: review,
       );
+
       if (res.error) {
-        resultState = ReviewSubmitErrorState(res.message);
+        _state = ResultState.error(res.message);
       } else {
-        resultState = ReviewSubmitSuccessState(res.customerReviews);
+        _state = ResultState.success(res.customerReviews);
       }
     } on SocketException {
-      resultState = ReviewSubmitErrorState('Tidak ada koneksi internet');
+      _state = ResultState.error('Tidak ada koneksi internet');
     } on TimeoutException {
-      resultState = ReviewSubmitErrorState('Koneksi lambat. Coba lagi');
+      _state = ResultState.error('Koneksi lambat. Coba lagi');
     } catch (e) {
-      resultState = ReviewSubmitErrorState(e.toString());
+      _state = ResultState.error(e.toString());
+    } finally {
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   void reset() {
-    resultState = ReviewIdleState();
+    _state = ResultState.none();
     notifyListeners();
   }
 }

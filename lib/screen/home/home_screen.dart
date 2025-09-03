@@ -5,7 +5,6 @@ import 'package:restaurant_app/provider/search/restaurant_search_provider.dart';
 import 'package:restaurant_app/provider/theme/theme_provider.dart';
 import 'package:restaurant_app/screen/home/restaurant_card_widget.dart';
 import 'package:restaurant_app/static/navigation_route.dart';
-import 'package:restaurant_app/static/restaurant_list_result_state.dart';
 import 'package:restaurant_app/styles/colors/app_color.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -19,11 +18,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-
-    Future.microtask(() {
-      if (mounted) {
-        context.read<RestaurantListProvider>().fetchRestaurantList();
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<RestaurantListProvider>().fetchRestaurantList();
     });
   }
 
@@ -104,51 +100,59 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 16),
                   Consumer<RestaurantListProvider>(
                     builder: (context, value, _) {
-                      return switch (value.resultState) {
-                        RestaurantListLoadingState() => const Center(
-                          child: CircularProgressIndicator(),
-                        ),
+                      final state = value.resultState;
 
-                        RestaurantListLoadedState(data: var restaurantList) =>
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: restaurantList.length,
-                            itemBuilder: (context, index) {
-                              final restaurant = restaurantList[index];
-                              return RestaurantCardWidget(
-                                restaurant: restaurant,
-                                onTap: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    NavigationRoute.detailRoute.name,
-                                    arguments: restaurant.id,
-                                  );
-                                },
-                              );
-                            },
-                          ),
+                      if (state.isLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
 
-                        RestaurantListNoInternetState() => Column(
+                      if (state.isSuccess) {
+                        final restaurants = state.data!;
+                        return ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: restaurants.length,
+                          itemBuilder: (context, index) {
+                            final restaurant = restaurants[index];
+                            return RestaurantCardWidget(
+                              restaurant: restaurant,
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  NavigationRoute.detailRoute.name,
+                                  arguments: restaurant.id,
+                                );
+                              },
+                            );
+                          },
+                        );
+                      }
+
+                      if (state.isNoInternet) {
+                        return Column(
                           children: [
                             Image.asset('assets/no-internet.png', height: 150),
                             const SizedBox(height: 16),
                             const Text('Tidak ada koneksi internet'),
                             const SizedBox(height: 16),
                             ElevatedButton.icon(
-                              onPressed: () {
-                                context
-                                    .read<RestaurantListProvider>()
-                                    .fetchRestaurantList();
-                              },
+                              onPressed: () => context
+                                  .read<RestaurantListProvider>()
+                                  .fetchRestaurantList(),
                               icon: const Icon(Icons.refresh),
                               label: const Text("Coba Lagi"),
                             ),
                           ],
-                        ),
+                        );
+                      }
 
-                        _ => const SizedBox(),
-                      };
+                      if (state.isError) {
+                        return Center(
+                          child: Text(state.message ?? 'Terjadi kesalahan'),
+                        );
+                      }
+
+                      return const SizedBox();
                     },
                   ),
                 ],

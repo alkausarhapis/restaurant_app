@@ -1,11 +1,10 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import 'package:restaurant_app/provider/search/restaurant_search_provider.dart';
 import 'package:restaurant_app/screen/home/restaurant_card_widget.dart';
 import 'package:restaurant_app/static/navigation_route.dart';
-import 'package:restaurant_app/static/restaurant_list_result_state.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -66,39 +65,40 @@ class _SearchScreenState extends State<SearchScreen> {
 
               Expanded(
                 child: Consumer<RestaurantSearchProvider>(
-                  builder: (context, value, child) {
-                    return switch (value.resultState) {
-                      RestaurantListLoadingState() => const Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                  builder: (context, value, _) {
+                    final state = value.state;
 
-                      RestaurantListLoadedState(data: var restaurantList) =>
-                        ListView.builder(
-                          itemCount: restaurantList.length,
-                          itemBuilder: (context, index) {
-                            final restaurant = restaurantList[index];
-                            return RestaurantCardWidget(
-                              restaurant: restaurant,
-                              onTap: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  NavigationRoute.detailRoute.name,
-                                  arguments: restaurant.id,
-                                );
-                              },
-                            );
-                          },
-                        ),
+                    if (state.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-                      RestaurantListEmptyState() => const Center(
-                        child: Text('Restoran tidak ditemukan'),
-                      ),
+                    if (state.isSuccess) {
+                      final restaurants = state.data!;
+                      if (restaurants.isEmpty) {
+                        return const Center(
+                          child: Text('Restoran tidak ditemukan'),
+                        );
+                      }
+                      return ListView.builder(
+                        itemCount: restaurants.length,
+                        itemBuilder: (context, index) {
+                          final restaurant = restaurants[index];
+                          return RestaurantCardWidget(
+                            restaurant: restaurant,
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                NavigationRoute.detailRoute.name,
+                                arguments: restaurant.id,
+                              );
+                            },
+                          );
+                        },
+                      );
+                    }
 
-                      RestaurantListErrorState() => Center(
-                        child: Text(value.message),
-                      ),
-
-                      RestaurantListNoInternetState() => Center(
+                    if (state.isNoInternet) {
+                      return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -117,12 +117,18 @@ class _SearchScreenState extends State<SearchScreen> {
                             ),
                           ],
                         ),
-                      ),
+                      );
+                    }
 
-                      RestaurantListNoneState() => const Center(
-                        child: Text('Mulai cari restoran favoritmu!'),
-                      ),
-                    };
+                    if (state.isError) {
+                      return Center(
+                        child: Text(state.message ?? 'Terjadi kesalahan'),
+                      );
+                    }
+
+                    return const Center(
+                      child: Text('Mulai cari restoran favoritmu!'),
+                    );
                   },
                 ),
               ),

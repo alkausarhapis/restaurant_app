@@ -4,53 +4,48 @@ import 'dart:io';
 import 'package:flutter/widgets.dart';
 import 'package:restaurant_app/data/api/api_service.dart';
 import 'package:restaurant_app/data/model/restaurant.dart';
-import 'package:restaurant_app/static/restaurant_list_result_state.dart';
+import 'package:restaurant_app/static/global_result_state.dart';
 
 class RestaurantSearchProvider extends ChangeNotifier {
   final ApiService _api;
   RestaurantSearchProvider(this._api);
 
-  RestaurantListResultState resultState = RestaurantListNoneState();
-  List<Restaurant> _results = [];
-  String message = '';
+  ResultState<List<Restaurant>> _state = ResultState.none();
+  ResultState<List<Restaurant>> get state => _state;
 
   Future<void> searchRestaurants(String query) async {
     final q = query.trim();
     if (q.isEmpty) {
-      _results = [];
-      resultState = RestaurantListNoneState();
+      _state = ResultState.none();
       notifyListeners();
       return;
     }
 
-    resultState = RestaurantListLoadingState();
+    _state = ResultState.loading();
     notifyListeners();
 
     try {
       final res = await _api.searchRestaurants(q);
-      _results = res.restaurants;
+      final results = res.restaurants;
 
-      if (_results.isEmpty) {
-        resultState = RestaurantListEmptyState();
+      if (results.isEmpty) {
+        _state = ResultState.success(<Restaurant>[]);
       } else {
-        resultState = RestaurantListLoadedState(_results);
+        _state = ResultState.success(results);
       }
     } on SocketException {
-      resultState = RestaurantListNoInternetState();
+      _state = ResultState.noInternet();
     } on TimeoutException {
-      resultState = RestaurantListNoInternetState();
+      _state = ResultState.noInternet();
     } catch (e) {
-      resultState = RestaurantListErrorState(e.toString());
-      message = 'Error during search: ${e.toString()}';
+      _state = ResultState.error(e.toString());
+    } finally {
+      notifyListeners();
     }
-
-    notifyListeners();
   }
 
   void reset() {
-    _results = [];
-    resultState = RestaurantListNoneState();
-    message = '';
+    _state = ResultState.none();
     notifyListeners();
   }
 }
