@@ -28,6 +28,7 @@ class AppTheme {
       colorSchemeSeed: AppColor.orange.color,
       textTheme: textTheme,
       brightness: Brightness.light,
+      bottomNavigationBarTheme: bottomNavBarTheme,
     );
   }
 
@@ -36,6 +37,14 @@ class AppTheme {
       colorSchemeSeed: AppColor.orange.color,
       textTheme: textTheme,
       brightness: Brightness.dark,
+      bottomNavigationBarTheme: bottomNavBarTheme,
+    );
+  }
+
+  static BottomNavigationBarThemeData get bottomNavBarTheme {
+    return const BottomNavigationBarThemeData(
+      showSelectedLabels: false,
+      showUnselectedLabels: false,
     );
   }
 }
