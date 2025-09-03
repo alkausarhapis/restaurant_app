@@ -3,25 +3,46 @@ import 'package:provider/provider.dart';
 import 'package:restaurant_app/data/api/api_service.dart';
 import 'package:restaurant_app/provider/detail/restaurant_detail_provider.dart';
 import 'package:restaurant_app/provider/home/restaurant_list_provider.dart';
+import 'package:restaurant_app/provider/index_nav_provider.dart';
+import 'package:restaurant_app/provider/prefs/shared_preferences_provider.dart';
 import 'package:restaurant_app/provider/search/restaurant_search_provider.dart';
 import 'package:restaurant_app/provider/theme/theme_provider.dart';
 import 'package:restaurant_app/screen/detail/detail_screen.dart';
 import 'package:restaurant_app/screen/detail/review/add_review_screen.dart';
+import 'package:restaurant_app/screen/favorite/favorite_screen.dart';
 import 'package:restaurant_app/screen/home/home_screen.dart';
+import 'package:restaurant_app/screen/main_screen.dart';
 import 'package:restaurant_app/screen/search/search_screen.dart';
+import 'package:restaurant_app/screen/setting/settings_screen.dart';
+import 'package:restaurant_app/service/shared_preferences_service.dart';
 import 'package:restaurant_app/static/navigation_route.dart';
 import 'package:restaurant_app/styles/theme/app_theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-// TODO: Favorite page & setting page (static)
-// TODO: Bottom navbar
-// TODO: Shared preferences theme
+// TODO: Favorite sqflite
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  final spService = SharedPreferencesService(prefs);
+  final initialSetting = spService.getSettingValue();
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => ThemeProvider()),
-        Provider(create: (context) => ApiService()),
+        Provider(create: (_) => ApiService()),
+        Provider(create: (_) => spService),
+        ChangeNotifierProvider(
+          create: (context) => SharedPreferencesProvider(
+            context.read<SharedPreferencesService>()..getSettingValue(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ThemeProvider(
+            initialMode: initialSetting.isDarkTheme
+                ? ThemeMode.dark
+                : ThemeMode.light,
+          ),
+        ),
         ChangeNotifierProvider(
           create: (context) =>
               RestaurantDetailProvider(context.read<ApiService>()),
@@ -34,6 +55,7 @@ void main() {
           create: (context) =>
               RestaurantSearchProvider(context.read<ApiService>()),
         ),
+        ChangeNotifierProvider(create: (context) => IndexNavProvider()),
       ],
       child: const MainApp(),
     ),
@@ -55,7 +77,12 @@ class MainApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           initialRoute: NavigationRoute.mainRoute.name,
           routes: {
-            NavigationRoute.mainRoute.name: (context) => const HomeScreen(),
+            NavigationRoute.mainRoute.name: (context) => const MainScreen(),
+            NavigationRoute.homeRoute.name: (context) => const HomeScreen(),
+            NavigationRoute.settingRoute.name: (context) =>
+                const SettingsScreen(),
+            NavigationRoute.favoriteRoute.name: (context) =>
+                const FavoriteScreen(),
             NavigationRoute.detailRoute.name: (context) => DetailScreen(
               restaurantId:
                   ModalRoute.of(context)?.settings.arguments as String,
