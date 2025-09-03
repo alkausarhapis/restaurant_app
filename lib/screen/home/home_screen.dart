@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:restaurant_app/provider/home/restaurant_list_provider.dart';
 import 'package:restaurant_app/provider/search/restaurant_search_provider.dart';
-import 'package:restaurant_app/provider/theme/theme_provider.dart';
 import 'package:restaurant_app/screen/home/restaurant_card_widget.dart';
 import 'package:restaurant_app/static/navigation_route.dart';
 import 'package:restaurant_app/styles/colors/app_color.dart';
@@ -26,21 +25,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          final currentTheme = Theme.of(context).brightness;
-          final isDark = currentTheme == Brightness.dark;
-          context.read<ThemeProvider>().setMode(
-            isDark ? ThemeMode.light : ThemeMode.dark,
-          );
-        },
-        tooltip: 'Toggle Dark/Light Mode',
-        child: Icon(
-          Theme.of(context).brightness == Brightness.dark
-              ? Icons.wb_sunny
-              : Icons.nightlight,
-        ),
-      ),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
