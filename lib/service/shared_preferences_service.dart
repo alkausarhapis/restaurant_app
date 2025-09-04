@@ -13,7 +13,7 @@ class SharedPreferencesService {
   }
 
   bool getNotificationEnabled() {
-    return _preferences.getBool(_keyNotification) ?? true;
+    return _preferences.getBool(_keyNotification) ?? false;
   }
 
   Future<void> setDarkMode(bool isDark) async {

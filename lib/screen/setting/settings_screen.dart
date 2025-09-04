@@ -12,15 +12,6 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<SharedPreferencesProvider>().getSettingValue();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final spProv = context.watch<SharedPreferencesProvider>();
     final bool currentIsDark = spProv.isDarkMode;
@@ -43,7 +34,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             InkWell(
               onTap: () {},
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.all(16),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -59,24 +50,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                     ),
-                    DropdownButtonHideUnderline(
-                      child: DropdownButton<bool>(
-                        value: currentIsDark,
-                        items: const [
-                          DropdownMenuItem(value: false, child: Text('Light')),
-                          DropdownMenuItem(value: true, child: Text('Dark')),
-                        ],
-                        onChanged: (value) async {
-                          if (value == null) return;
+                    const SizedBox(width: 64),
+                    Expanded(
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<bool>(
+                          value: currentIsDark,
+                          items: const [
+                            DropdownMenuItem(
+                              value: false,
+                              child: Text('Light'),
+                            ),
+                            DropdownMenuItem(value: true, child: Text('Dark')),
+                          ],
+                          onChanged: (value) async {
+                            if (value == null) return;
 
-                          context.read<ThemeProvider>().setMode(
-                            value ? ThemeMode.dark : ThemeMode.light,
-                          );
+                            context.read<ThemeProvider>().setMode(
+                              value ? ThemeMode.dark : ThemeMode.light,
+                            );
 
-                          await context
-                              .read<SharedPreferencesProvider>()
-                              .setDarkMode(value);
-                        },
+                            await context
+                                .read<SharedPreferencesProvider>()
+                                .setDarkMode(value);
+                          },
+                        ),
                       ),
                     ),
                   ],
