@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:restaurant_app/data/model/detail/restaurant_detail.dart';
+import 'package:restaurant_app/provider/detail/favorite_icon_provider.dart';
 import 'package:restaurant_app/provider/detail/restaurant_detail_provider.dart';
+import 'package:restaurant_app/screen/detail/favorite_icbutton_widget.dart';
 import 'package:restaurant_app/screen/detail/section_card_widget.dart';
 import 'package:restaurant_app/static/navigation_route.dart';
 import 'package:restaurant_app/styles/colors/app_color.dart';
@@ -30,6 +32,20 @@ class BodyOfDetailScreenWidget extends StatelessWidget {
               ),
             ),
           ),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ChangeNotifierProvider(
+                create: (_) => FavoriteIconProvider(),
+                child: CircleAvatar(
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.secondaryContainer,
+                  child: FavoriteIcbuttonWidget(restaurant: restaurant),
+                ),
+              ),
+            ),
+          ],
           flexibleSpace: FlexibleSpaceBar(
             background: Hero(
               tag: restaurant.pictureId,
