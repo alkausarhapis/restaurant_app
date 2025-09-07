@@ -45,12 +45,12 @@ class _FavoriteIcbuttonWidgetState extends State<FavoriteIcbuttonWidget> {
           if (!isFavorited) {
             await dbProvider.addToFavorite(widget.restaurant);
             if (!mounted) return;
-            _showSnackBar('${widget.restaurant.name} added to favorites');
+            _showSnackBar('${widget.restaurant.name} ditambahkan ke favorit');
           } else {
             await dbProvider.removeFavorite(widget.restaurant.id);
             if (!mounted) return;
             _showSnackBar(
-              '${widget.restaurant.name} removed from favorites',
+              '${widget.restaurant.name} dihapus dari favorit',
               isError: true,
             );
           }

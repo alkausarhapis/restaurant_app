@@ -1,22 +1,20 @@
+// lib/provider/db/local_database_provider.dart
 import 'package:flutter/material.dart';
 import 'package:restaurant_app/data/local/sqflite_service.dart';
 import 'package:restaurant_app/data/model/detail/restaurant_detail.dart';
+import 'package:restaurant_app/data/model/favorite_restaurant.dart';
 
 class LocalDatabaseProvider extends ChangeNotifier {
   final SqfliteService _service;
-
   LocalDatabaseProvider(this._service);
 
   String _message = "";
   String get message => _message;
 
-  List<RestaurantDetail>? _favoriteRestaurants;
-  List<RestaurantDetail>? get favoriteRestaurants => _favoriteRestaurants;
+  List<FavoriteRestaurant>? _favoriteRestaurants;
+  List<FavoriteRestaurant>? get favoriteRestaurants => _favoriteRestaurants;
 
-  RestaurantDetail? _restaurantDetail;
-  RestaurantDetail? get restaurantDetail => _restaurantDetail;
-
-  // Insert or update restaurant to favorites.
+  // Insert/update favorite using stored data at RestaurantDetail.
   Future<void> addToFavorite(RestaurantDetail restaurant) async {
     try {
       await _service.upsertFavorite(restaurant);
@@ -28,11 +26,9 @@ class LocalDatabaseProvider extends ChangeNotifier {
     }
   }
 
-  // Load all favorited restaurants.
   Future<void> loadAllFavorites() async {
     try {
-      _favoriteRestaurants = await _service.getTableFavoriteRestaurant();
-      _restaurantDetail = null;
+      _favoriteRestaurants = await _service.getAllFavorites();
       _message = "Favorites loaded";
     } catch (e) {
       _message = "Failed to load favorites: $e";
@@ -41,21 +37,6 @@ class LocalDatabaseProvider extends ChangeNotifier {
     }
   }
 
-  // Load a single restaurant detail by ID.
-  Future<void> loadFavoriteById(String id) async {
-    try {
-      _restaurantDetail = await _service.getDetailRelationId(id);
-      _message = _restaurantDetail != null
-          ? "Detail loaded"
-          : "Favorite not found";
-    } catch (e) {
-      _message = "Failed to load detail: $e";
-    } finally {
-      notifyListeners();
-    }
-  }
-
-  // Remove a restaurant from favorites.
   Future<void> removeFavorite(String id) async {
     try {
       await _service.removeFavorite(id);
@@ -67,7 +48,6 @@ class LocalDatabaseProvider extends ChangeNotifier {
     }
   }
 
-  // Check if a restaurant is in favorites.
   Future<bool> isFavorite(String id) async {
     try {
       return await _service.isFavorite(id);

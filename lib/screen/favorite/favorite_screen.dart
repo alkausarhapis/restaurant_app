@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:restaurant_app/data/model/detail/restaurant_detail.dart';
+import 'package:restaurant_app/data/model/favorite_restaurant.dart';
 import 'package:restaurant_app/provider/db/local_database_provider.dart';
 import 'package:restaurant_app/screen/home/restaurant_card_widget.dart';
 import 'package:restaurant_app/static/navigation_route.dart';
@@ -29,7 +29,7 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.all(16),
               child: Text(
                 'Restoran Favorit',
                 style: Theme.of(context).textTheme.displayMedium,
@@ -48,7 +48,9 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
                     }
 
                     if (favorites.isEmpty) {
-                      return const Center(child: Text('No Favorites'));
+                      return Center(
+                        child: Text('Belum ada restoran favorit 🍽️'),
+                      );
                     }
 
                     return ListView.builder(
