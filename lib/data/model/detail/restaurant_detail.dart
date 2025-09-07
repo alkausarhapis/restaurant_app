@@ -1,6 +1,5 @@
 import 'package:restaurant_app/data/model/detail/category.dart';
 import 'package:restaurant_app/data/model/detail/menu.dart';
-import 'package:restaurant_app/data/model/restaurant.dart';
 import 'package:restaurant_app/data/model/review/customer_review.dart';
 
 class RestaurantDetail {
@@ -44,33 +43,6 @@ class RestaurantDetail {
       customerReviews: (json['customerReviews'] as List? ?? [])
           .map((e) => CustomerReview.fromJson(e as Map<String, dynamic>))
           .toList(),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return <String, dynamic>{
-      'id': id,
-      'name': name,
-      'city': city,
-      'address': address,
-      'pictureId': pictureId,
-      'rating': rating,
-      'categories': categories.map((c) => c.toJson()).toList(),
-      'menus': menu.toJson(),
-      'customerReviews': customerReviews.map((r) => r.toJson()).toList(),
-    };
-  }
-}
-
-extension RestaurantDetailMapper on RestaurantDetail {
-  Restaurant toRestaurant() {
-    return Restaurant(
-      id: id,
-      name: name,
-      city: city,
-      pictureId: pictureId,
-      rating: rating,
-      description: description,
     );
   }
 }

@@ -24,11 +24,4 @@ class Menu {
           : <MenuItem>[],
     );
   }
-
-  Map<String, dynamic> toJson() {
-    return <String, dynamic>{
-      'foods': foods.map((f) => f.toJson()).toList(),
-      'drinks': drinks.map((d) => d.toJson()).toList(),
-    };
-  }
 }

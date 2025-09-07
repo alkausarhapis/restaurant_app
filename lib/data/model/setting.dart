@@ -4,6 +4,7 @@ class Setting {
 
   Setting({required this.notificationEnable, required this.isDarkTheme});
 
+  // Create copy object to override default setting values.
   Setting copyWith({bool? notificationEnable, bool? isDarkTheme}) {
     return Setting(
       notificationEnable: notificationEnable ?? this.notificationEnable,
