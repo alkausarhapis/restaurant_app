@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+// provider notifikasi
+import 'package:restaurant_app/provider/notification/local_notifications_provider.dart';
 import 'package:restaurant_app/provider/prefs/shared_preferences_provider.dart';
 import 'package:restaurant_app/provider/theme/theme_provider.dart';
 
@@ -22,6 +24,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
@@ -31,6 +34,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 16),
 
+            // Tema
             InkWell(
               onTap: () {},
               child: Padding(
@@ -64,11 +68,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ],
                           onChanged: (value) async {
                             if (value == null) return;
-
                             context.read<ThemeProvider>().setMode(
                               value ? ThemeMode.dark : ThemeMode.light,
                             );
-
                             await context
                                 .read<SharedPreferencesProvider>()
                                 .setDarkMode(value);
@@ -81,6 +83,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
 
+            // Notifikasi (06:30)
             InkWell(
               onTap: () async {
                 final next = !currentNotifEnabled;
@@ -98,11 +101,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Notifikasi',
+                        'Notifikasi (06:30)',
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                     ),
-
                     Switch.adaptive(
                       value: currentNotifEnabled,
                       onChanged: (value) async {
@@ -113,6 +115,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
             ),
+
+            // Preview notifikasi
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.notification_important_outlined),
+                  label: const Text('Preview notifikasi'),
+                  onPressed: () async {
+                    await context
+                        .read<LocalNotificationProvider>()
+                        .requestPermission();
+                    await context
+                        .read<LocalNotificationProvider>()
+                        .previewNow();
+                    _showSnack('Preview notifikasi dikirim');
+                  },
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -120,17 +143,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _toggleNotification(bool enabled) async {
+    if (enabled) {
+      await context.read<LocalNotificationProvider>().requestPermission();
+    }
+
+    await context.read<LocalNotificationProvider>().setEnabled(enabled);
+
+    // Sinkronkan state switch ke prefs-mu (UI tetap pakai SharedPreferencesProvider)
     await context.read<SharedPreferencesProvider>().setNotification(enabled);
 
-    _showNotifSnack(enabled);
+    _showSnack(enabled ? 'Notifikasi diaktifkan' : 'Notifikasi dimatikan');
   }
 
-  void _showNotifSnack(bool enabled) {
+  void _showSnack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          enabled ? 'Notifikasi diaktifkan' : 'Notifikasi dimatikan',
-        ),
+        content: Text(msg),
         duration: const Duration(milliseconds: 1200),
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(12),

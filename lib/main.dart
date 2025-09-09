@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:math'; // untuk random saat payload == 'random'
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:restaurant_app/data/api/api_service.dart';
@@ -6,6 +9,8 @@ import 'package:restaurant_app/provider/db/local_database_provider.dart';
 import 'package:restaurant_app/provider/detail/restaurant_detail_provider.dart';
 import 'package:restaurant_app/provider/home/restaurant_list_provider.dart';
 import 'package:restaurant_app/provider/index_nav_provider.dart';
+import 'package:restaurant_app/provider/notification/local_notifications_provider.dart';
+import 'package:restaurant_app/provider/notification/payload_provider.dart';
 import 'package:restaurant_app/provider/prefs/shared_preferences_provider.dart';
 import 'package:restaurant_app/provider/search/restaurant_search_provider.dart';
 import 'package:restaurant_app/provider/theme/theme_provider.dart';
@@ -16,25 +21,52 @@ import 'package:restaurant_app/screen/home/home_screen.dart';
 import 'package:restaurant_app/screen/main_screen.dart';
 import 'package:restaurant_app/screen/search/search_screen.dart';
 import 'package:restaurant_app/screen/setting/settings_screen.dart';
+// notification stuff
+import 'package:restaurant_app/service/local_notifications_service.dart';
 import 'package:restaurant_app/service/shared_preferences_service.dart';
 import 'package:restaurant_app/static/navigation_route.dart';
 import 'package:restaurant_app/styles/theme/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// TODO: Clean sqflite code
-// TODO: Figure out how to handle offline first detail of favorited restaurant or else back to storing restaurant detail based on /list
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // cek apakah app diluncurkan dari notifikasi (cold start)
+  final launchDetails = await flutterLocalNotificationsPlugin
+      .getNotificationAppLaunchDetails();
+
+  String initialRoute = NavigationRoute.mainRoute.name;
+  String? initialPayload;
+
+  if (launchDetails?.didNotificationLaunchApp ?? false) {
+    initialRoute = NavigationRoute.detailRoute.name;
+    initialPayload = launchDetails!.notificationResponse?.payload;
+  }
+
   final prefs = await SharedPreferences.getInstance();
   final spService = SharedPreferencesService(prefs);
   final initialSetting = spService.getSettingValue();
+
   runApp(
     MultiProvider(
       providers: [
         Provider(create: (_) => ApiService()),
         Provider(create: (_) => spService),
         Provider(create: (_) => SqfliteService()),
+
+        // ===== Notifications
+        ChangeNotifierProvider(
+          create: (_) => PayloadProvider(payload: initialPayload),
+        ),
+        ChangeNotifierProvider(
+          create: (ctx) => LocalNotificationProvider(
+            LocalNotificationsService(),
+            ctx.read<SharedPreferencesService>(),
+            ctx.read<ApiService>(),
+          )..init(),
+        ),
+
+        // ===== Existing providers
         ChangeNotifierProvider(
           create: (context) => SharedPreferencesProvider(
             context.read<SharedPreferencesService>(),
@@ -65,13 +97,67 @@ void main() async {
         ),
         ChangeNotifierProvider(create: (context) => IndexNavProvider()),
       ],
-      child: const MainApp(),
+      child: MainApp(initialRoute: initialRoute),
     ),
   );
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class MainApp extends StatefulWidget {
+  const MainApp({super.key, required this.initialRoute});
+  final String initialRoute;
+
+  @override
+  State<MainApp> createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> {
+  StreamSubscription<String?>? _sub;
+
+  @override
+  void initState() {
+    super.initState();
+    // listen payload dari stream → update provider & navigate (tanpa rootNavKey)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _sub = selectNotificationStream.stream.listen((String? payload) async {
+        context.read<PayloadProvider>().payload = payload;
+
+        if (payload == 'random') {
+          // Ambil restoran random & navigate
+          final api = context.read<ApiService>();
+          final listResp = await api.getRestaurantList();
+          final list = listResp.restaurants;
+          if (list.isNotEmpty) {
+            final r = list[Random().nextInt(list.length)];
+            if (!mounted) return;
+            Navigator.pushNamed(
+              context,
+              NavigationRoute.detailRoute.name,
+              arguments: r.id,
+            );
+          } else {
+            if (!mounted) return;
+            Navigator.pushNamed(context, NavigationRoute.homeRoute.name);
+          }
+          return;
+        }
+
+        if (payload != null && payload.isNotEmpty) {
+          if (!mounted) return;
+          Navigator.pushNamed(
+            context,
+            NavigationRoute.detailRoute.name,
+            arguments: payload,
+          );
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +169,7 @@ class MainApp extends StatelessWidget {
           darkTheme: AppTheme.darkTheme,
           themeMode: themeProvider.mode,
           debugShowCheckedModeBanner: false,
-          initialRoute: NavigationRoute.mainRoute.name,
+          initialRoute: widget.initialRoute,
           routes: {
             NavigationRoute.mainRoute.name: (context) => const MainScreen(),
             NavigationRoute.homeRoute.name: (context) => const HomeScreen(),
