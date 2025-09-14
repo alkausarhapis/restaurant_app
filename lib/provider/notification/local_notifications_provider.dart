@@ -73,8 +73,8 @@ class LocalNotificationProvider extends ChangeNotifier {
       id: _dailyId,
       title: 'Rekomendasi restoran hari ini',
       body: 'Ketuk untuk melihat rekomendasi terbaru',
-      hour: 6,
-      minute: 35,
+      hour: 13,
+      minute: 17,
       payload: 'random', // sentinel → di-listener akan fetch random terbaru
       bigPictureFilePath: bigPath, // boleh null untuk notifikasi tanpa gambar
     );
@@ -95,33 +95,45 @@ class LocalNotificationProvider extends ChangeNotifier {
 
   /// Preview sekarang: ambil random + tampilkan Big Picture.
   Future<void> previewNow() async {
-    final listResp = await _api.getRestaurantList();
-    final list = listResp.restaurants;
-    if (list.isEmpty) return;
+    try {
+      // Fetch random restaurant
+      final listResp = await _api.getRestaurantList();
+      final list = listResp.restaurants;
+      if (list.isEmpty) return;
 
-    final rnd = Random();
-    final pick = list[rnd.nextInt(list.length)];
-    final id = pick.id; // String
-    final name = pick.name;
-    final city = pick.city;
-    final pictureId = pick.pictureId;
+      final rnd = Random();
+      final pick = list[rnd.nextInt(list.length)];
+      final id = pick.id; // String
+      final name = pick.name;
+      final city = pick.city;
+      final pictureId = pick.pictureId;
 
-    Uint8List? bigBytes;
-    if (pictureId.isNotEmpty) {
-      final url =
-          'https://restaurant-api.dicoding.dev/images/medium/$pictureId';
-      final resp = await http.get(Uri.parse(url));
-      if (resp.statusCode == 200) {
-        bigBytes = resp.bodyBytes;
+      debugPrint("Preview notification with restaurant: $name (ID: $id)");
+
+      // Download image
+      Uint8List? bigBytes;
+      if (pictureId.isNotEmpty) {
+        final url =
+            'https://restaurant-api.dicoding.dev/images/medium/$pictureId';
+        final resp = await http.get(Uri.parse(url));
+        if (resp.statusCode == 200) {
+          bigBytes = resp.bodyBytes;
+          debugPrint("Downloaded image for notification");
+        }
       }
-    }
 
-    await _notif.showBigPicture(
-      id: 99999,
-      title: 'Preview — $name',
-      body: city,
-      bigPictureBytes: bigBytes,
-      payload: id,
-    );
+      // Show notification with restaurant ID as payload (same as scheduled)
+      await _notif.showBigPicture(
+        id: 99999,
+        title: 'Rekomendasi Restoran: $name', // Match scheduled title format
+        body: 'Restoran di $city - tap untuk detail', // More descriptive
+        bigPictureBytes: bigBytes,
+        payload: id, // Restaurant ID as payload for navigation
+      );
+
+      debugPrint("Preview notification sent with payload: $id");
+    } catch (e) {
+      debugPrint("Error showing preview notification: $e");
+    }
   }
 }

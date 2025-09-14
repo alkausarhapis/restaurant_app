@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math'; // untuk random saat payload == 'random'
 
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 import 'package:restaurant_app/data/api/api_service.dart';
 import 'package:restaurant_app/data/local/sqflite_service.dart';
@@ -28,19 +29,52 @@ import 'package:restaurant_app/static/navigation_route.dart';
 import 'package:restaurant_app/styles/theme/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+@pragma('vm:entry-point')
+void notificationTapBackground(NotificationResponse notificationResponse) {
+  debugPrint("Background tap handler: ${notificationResponse.payload}");
+  selectNotificationStream.add(notificationResponse.payload);
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Register the background handler
+  FlutterLocalNotificationsPlugin().initialize(
+    const InitializationSettings(
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+    ),
+    onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
+  );
 
   // cek apakah app diluncurkan dari notifikasi (cold start)
   final launchDetails = await flutterLocalNotificationsPlugin
       .getNotificationAppLaunchDetails();
+  print("Launch details: $launchDetails"); // Add this
+  print(
+    "Launch payload: ${launchDetails?.notificationResponse?.payload}",
+  ); // Add this
 
   String initialRoute = NavigationRoute.mainRoute.name;
   String? initialPayload;
 
   if (launchDetails?.didNotificationLaunchApp ?? false) {
-    initialRoute = NavigationRoute.detailRoute.name;
-    initialPayload = launchDetails!.notificationResponse?.payload;
+    final payload = launchDetails!.notificationResponse?.payload;
+    print("Cold start payload: $payload");
+
+    if (payload != null && payload.isNotEmpty) {
+      if (payload == 'random') {
+        // Handle random case - maybe set a flag to fetch random on start
+        initialRoute = NavigationRoute.mainRoute.name;
+      } else {
+        initialRoute = NavigationRoute.detailRoute.name;
+        initialPayload = payload;
+      }
+    } else {
+      // Default if payload is null/empty
+      initialRoute = NavigationRoute.mainRoute.name;
+    }
   }
 
   final prefs = await SharedPreferences.getInstance();
@@ -119,32 +153,32 @@ class _MainAppState extends State<MainApp> {
     // listen payload dari stream → update provider & navigate (tanpa rootNavKey)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _sub = selectNotificationStream.stream.listen((String? payload) async {
+        print("Stream received payload: $payload");
         context.read<PayloadProvider>().payload = payload;
 
+        if (payload == null) return;
+
         if (payload == 'random') {
-          // Ambil restoran random & navigate
-          final api = context.read<ApiService>();
-          final listResp = await api.getRestaurantList();
-          final list = listResp.restaurants;
-          if (list.isNotEmpty) {
+          try {
+            // Fetch random restaurant
+            final api = context.read<ApiService>();
+            final listResp = await api.getRestaurantList();
+            final list = listResp.restaurants;
+            if (list.isEmpty) return;
+
             final r = list[Random().nextInt(list.length)];
-            if (!mounted) return;
-            Navigator.pushNamed(
-              context,
+
+            // Use navigatorKey instead of context
+            navigatorKey.currentState?.pushNamed(
               NavigationRoute.detailRoute.name,
               arguments: r.id,
             );
-          } else {
-            if (!mounted) return;
-            Navigator.pushNamed(context, NavigationRoute.homeRoute.name);
+          } catch (e) {
+            print("Error navigating to random restaurant: $e");
           }
-          return;
-        }
-
-        if (payload != null && payload.isNotEmpty) {
-          if (!mounted) return;
-          Navigator.pushNamed(
-            context,
+        } else if (payload.isNotEmpty) {
+          // Use navigatorKey for direct navigation too
+          navigatorKey.currentState?.pushNamed(
             NavigationRoute.detailRoute.name,
             arguments: payload,
           );
@@ -164,6 +198,7 @@ class _MainAppState extends State<MainApp> {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
+          navigatorKey: navigatorKey, // Add this line
           title: 'Restaurants',
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
@@ -177,10 +212,14 @@ class _MainAppState extends State<MainApp> {
                 const SettingsScreen(),
             NavigationRoute.favoriteRoute.name: (context) =>
                 const FavoriteScreen(),
-            NavigationRoute.detailRoute.name: (context) => DetailScreen(
-              restaurantId:
-                  ModalRoute.of(context)?.settings.arguments as String,
-            ),
+            NavigationRoute.detailRoute.name: (context) {
+              final args = ModalRoute.of(context)?.settings.arguments;
+              if (args == null) {
+                // Handle null payload - either return to home or show error
+                return const HomeScreen(); // or some error screen
+              }
+              return DetailScreen(restaurantId: args as String);
+            },
             NavigationRoute.searchRoute.name: (context) => const SearchScreen(),
             NavigationRoute.addReviewRoute.name: (context) =>
                 const AddReviewScreen(),

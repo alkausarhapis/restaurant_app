@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -22,6 +23,7 @@ class LocalNotificationsService {
       init,
       onDidReceiveNotificationResponse: (resp) {
         final payload = resp.payload;
+        debugPrint("Foreground notification payload: $payload"); // Add this
         if (payload != null && payload.isNotEmpty) {
           selectNotificationStream.add(payload);
         }
@@ -183,6 +185,7 @@ class LocalNotificationsService {
 @pragma('vm:entry-point')
 void _tapFromBackground(NotificationResponse resp) {
   final payload = resp.payload;
+  debugPrint("Background notification payload: $payload"); // Add this
   if (payload != null && payload.isNotEmpty) {
     selectNotificationStream.add(payload);
   }
