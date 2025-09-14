@@ -16,6 +16,14 @@ class SharedPreferencesProvider extends ChangeNotifier {
 
   bool get isNotificationEnabled => _setting.notificationEnable;
   bool get isDarkMode => _setting.isDarkTheme;
+  int get notificationHour => _setting.notificationHour;
+  int get notificationMinute => _setting.notificationMinute;
+
+  String get notificationTimeString {
+    final hour = notificationHour.toString().padLeft(2, '0');
+    final minute = notificationMinute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
 
   Future<void> saveSettingValue(Setting value) async {
     try {
@@ -38,6 +46,15 @@ class SharedPreferencesProvider extends ChangeNotifier {
   Future<void> setDarkMode(bool isDark) async {
     await _service.setDarkMode(isDark);
     _setting = (_setting).copyWith(isDarkTheme: isDark);
+    notifyListeners();
+  }
+
+  Future<void> setNotificationTime(int hour, int minute) async {
+    await _service.setNotificationTime(hour, minute);
+    _setting = (_setting).copyWith(
+      notificationHour: hour,
+      notificationMinute: minute,
+    );
     notifyListeners();
   }
 }

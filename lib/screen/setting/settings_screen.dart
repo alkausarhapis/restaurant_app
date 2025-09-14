@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-// provider notifikasi
 import 'package:restaurant_app/provider/notification/local_notifications_provider.dart';
 import 'package:restaurant_app/provider/prefs/shared_preferences_provider.dart';
 import 'package:restaurant_app/provider/theme/theme_provider.dart';
@@ -18,13 +17,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final spProv = context.watch<SharedPreferencesProvider>();
     final bool currentIsDark = spProv.isDarkMode;
     final bool currentNotifEnabled = spProv.isNotificationEnabled;
+    final String currentTime = spProv.notificationTimeString;
 
     return Scaffold(
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
@@ -34,7 +33,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Tema
             InkWell(
               onTap: () {},
               child: Padding(
@@ -83,7 +81,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
 
-            // Notifikasi (06:30)
             InkWell(
               onTap: () async {
                 final next = !currentNotifEnabled;
@@ -101,7 +98,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Notifikasi (06:30)',
+                        'Notifikasi',
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                     ),
@@ -116,23 +113,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
 
-            // Preview notifikasi
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.notification_important_outlined),
-                  label: const Text('Preview notifikasi'),
-                  onPressed: () async {
-                    await context
-                        .read<LocalNotificationProvider>()
-                        .requestPermission();
-                    await context
-                        .read<LocalNotificationProvider>()
-                        .previewNow();
-                    _showSnack('Preview notifikasi dikirim');
-                  },
+            InkWell(
+              onTap: () => _selectTime(context),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.access_time,
+                      size: 30,
+                      color: Theme.of(context).colorScheme.inverseSurface,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Waktu notifikasi',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                    Text(
+                      currentTime,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.arrow_forward_ios, size: 16),
+                  ],
+                ),
+              ),
+            ),
+
+            InkWell(
+              onTap: _showPreviewNotification,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.notification_important_outlined,
+                      size: 30,
+                      color: Theme.of(context).colorScheme.inverseSurface,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Tes Notifikasi',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -142,14 +170,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _selectTime(BuildContext context) async {
+    final preferencesProvider = context.read<SharedPreferencesProvider>();
+    final notificationProvider = context.read<LocalNotificationProvider>();
+    final currentHour = preferencesProvider.notificationHour;
+    final currentMinute = preferencesProvider.notificationMinute;
+
+    final TimeOfDay? selectedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: currentHour, minute: currentMinute),
+    );
+
+    if (selectedTime != null && mounted) {
+      await preferencesProvider.setNotificationTime(
+        selectedTime.hour,
+        selectedTime.minute,
+      );
+
+      if (!mounted) return;
+
+      await notificationProvider.updateNotificationTime(
+        selectedTime.hour,
+        selectedTime.minute,
+      );
+
+      _showSnack('Waktu notifikasi berhasil diubah!');
+    }
+  }
+
   Future<void> _toggleNotification(bool enabled) async {
     if (enabled) {
       await context.read<LocalNotificationProvider>().requestPermission();
     }
 
+    if (!mounted) return;
     await context.read<LocalNotificationProvider>().setEnabled(enabled);
 
-    // Sinkronkan state switch ke prefs-mu (UI tetap pakai SharedPreferencesProvider)
+    if (!mounted) return;
     await context.read<SharedPreferencesProvider>().setNotification(enabled);
 
     _showSnack(enabled ? 'Notifikasi diaktifkan' : 'Notifikasi dimatikan');
@@ -164,5 +221,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         margin: const EdgeInsets.all(12),
       ),
     );
+  }
+
+  Future<void> _showPreviewNotification() async {
+    await context.read<LocalNotificationProvider>().requestPermission();
+
+    if (!mounted) return;
+    await context.read<LocalNotificationProvider>().showPreviewNotification();
+
+    if (!mounted) return;
+    _showSnack('Preview notifikasi dikirim');
   }
 }

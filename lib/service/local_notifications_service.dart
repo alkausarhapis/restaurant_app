@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -10,7 +9,6 @@ import 'package:timezone/timezone.dart' as tz;
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-/// Stream payload untuk didengar di UI (tanpa rootNavKey).
 final StreamController<String?> selectNotificationStream =
     StreamController<String?>.broadcast();
 
@@ -23,29 +21,27 @@ class LocalNotificationsService {
       init,
       onDidReceiveNotificationResponse: (resp) {
         final payload = resp.payload;
-        debugPrint("Foreground notification payload: $payload"); // Add this
         if (payload != null && payload.isNotEmpty) {
           selectNotificationStream.add(payload);
         }
       },
-      onDidReceiveBackgroundNotificationResponse: _tapFromBackground,
     );
 
-    const ch = AndroidNotificationChannel(
-      'daily_restaurant_channel',
-      'Daily Restaurant',
-      description: 'Daily random restaurant reminder',
+    const channel = AndroidNotificationChannel(
+      'restaurant_channel',
+      'Restaurant Recommendations',
+      description: 'Daily restaurant recommendations',
       importance: Importance.high,
     );
+
     await flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >()
-        ?.createNotificationChannel(ch);
+        ?.createNotificationChannel(channel);
   }
 
-  // Android 13+ permission (sesuai pola yang kamu minta)
-  Future<bool> requestAndroidPermissionIfNeeded() async {
+  Future<bool> requestPermission() async {
     final impl = flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
@@ -56,7 +52,6 @@ class LocalNotificationsService {
     return await impl?.requestNotificationsPermission() ?? Future.value(false);
   }
 
-  // Beberapa device/Android 12+ perlu akses exact alarm (mengarah ke settings).
   Future<bool> requestExactAlarmsPermission() async {
     final impl = flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
@@ -65,14 +60,12 @@ class LocalNotificationsService {
     return await impl?.requestExactAlarmsPermission() ?? Future.value(false);
   }
 
-  // Wajib sebelum zonedSchedule
   Future<void> configureLocalTimeZone() async {
     tz.initializeTimeZones();
     final name = await FlutterTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(name));
   }
 
-  // Notifikasi Big Picture instan (untuk preview)
   Future<void> showBigPicture({
     required int id,
     required String title,
@@ -95,9 +88,9 @@ class LocalNotificationsService {
 
     final details = NotificationDetails(
       android: AndroidNotificationDetails(
-        'daily_restaurant_channel',
-        'Daily Restaurant',
-        channelDescription: 'Daily random restaurant reminder',
+        'restaurant_channel',
+        'Restaurant Recommendations',
+        channelDescription: 'Daily restaurant recommendations',
         importance: Importance.high,
         priority: Priority.high,
         styleInformation: style,
@@ -114,20 +107,18 @@ class LocalNotificationsService {
     );
   }
 
-  /// Repeat harian exact di jam [hour]:[minute] lokal.
-  /// Catatan: konten notifikasi akan statis (pakai payload 'random' sebagai sentinel).
-  Future<void> zonedScheduleDailyAtTime({
+  Future<void> scheduleDailyAtTime({
     required int id,
     required String title,
     required String body,
-    required int hour, // contoh: 6
-    required int minute, // contoh: 30
+    required int hour,
+    required int minute,
     String? payload,
     String? bigPictureFilePath,
     Uint8List? largeIconBytes,
   }) async {
     final now = tz.TZDateTime.now(tz.local);
-    var scheduled = tz.TZDateTime(
+    var scheduledTime = tz.TZDateTime(
       tz.local,
       now.year,
       now.month,
@@ -135,8 +126,9 @@ class LocalNotificationsService {
       hour,
       minute,
     );
-    if (scheduled.isBefore(now)) {
-      scheduled = scheduled.add(const Duration(days: 1));
+
+    if (scheduledTime.isBefore(now)) {
+      scheduledTime = scheduledTime.add(const Duration(days: 1));
     }
 
     final style = bigPictureFilePath != null
@@ -153,9 +145,9 @@ class LocalNotificationsService {
 
     final details = NotificationDetails(
       android: AndroidNotificationDetails(
-        'daily_restaurant_channel',
-        'Daily Restaurant',
-        channelDescription: 'Daily random restaurant reminder',
+        'restaurant_channel',
+        'Restaurant Recommendations',
+        channelDescription: 'Daily restaurant recommendations',
         importance: Importance.high,
         priority: Priority.high,
         styleInformation: style,
@@ -167,26 +159,20 @@ class LocalNotificationsService {
       id,
       title,
       body,
-      scheduled,
+      scheduledTime,
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time, // repeat harian
+      matchDateTimeComponents: DateTimeComponents.time,
       payload: payload,
     );
   }
 
-  Future<List<PendingNotificationRequest>> pending() =>
+  Future<List<PendingNotificationRequest>> getPendingNotifications() =>
       flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
-  Future<void> cancel(int id) => flutterLocalNotificationsPlugin.cancel(id);
-  Future<void> cancelAll() => flutterLocalNotificationsPlugin.cancelAll();
-}
+  Future<void> cancelNotification(int id) =>
+      flutterLocalNotificationsPlugin.cancel(id);
 
-@pragma('vm:entry-point')
-void _tapFromBackground(NotificationResponse resp) {
-  final payload = resp.payload;
-  debugPrint("Background notification payload: $payload"); // Add this
-  if (payload != null && payload.isNotEmpty) {
-    selectNotificationStream.add(payload);
-  }
+  Future<void> cancelAllNotifications() =>
+      flutterLocalNotificationsPlugin.cancelAll();
 }

@@ -9,131 +9,212 @@ import 'package:restaurant_app/service/local_notifications_service.dart';
 import 'package:restaurant_app/service/shared_preferences_service.dart';
 
 class LocalNotificationProvider extends ChangeNotifier {
-  final LocalNotificationsService _notif;
-  final SharedPreferencesService _prefs;
-  final ApiService _api;
+  final LocalNotificationsService _notificationService;
+  final SharedPreferencesService _preferencesService;
+  final ApiService _apiService;
 
-  LocalNotificationProvider(this._notif, this._prefs, this._api);
+  static const int _dailyNotificationId = 1001;
 
-  bool _enabled = false;
-  bool get enabled => _enabled;
+  bool _isEnabled = false;
+  bool get isEnabled => _isEnabled;
 
-  // Single ID untuk repeat harian jam 06:30
-  static const int _dailyId = 63001;
+  bool _hasPermission = false;
+
+  LocalNotificationProvider(
+    this._notificationService,
+    this._preferencesService,
+    this._apiService,
+  );
 
   Future<void> init() async {
-    await _notif.init();
-    await _notif.configureLocalTimeZone();
-    _enabled = _prefs.getNotificationEnabled();
+    await _notificationService.init();
+    await _notificationService.configureLocalTimeZone();
+    _isEnabled = _preferencesService.getNotificationEnabled();
+
+    _hasPermission = await _checkPermissions();
+
+    if (_isEnabled && _hasPermission) {
+      await _scheduleIfNeeded();
+    }
+
     notifyListeners();
   }
 
-  Future<void> requestPermission() async {
-    await _notif.requestAndroidPermissionIfNeeded();
-    // (opsional) beberapa device/Android 12+ perlu exact-alarm setting:
-    await _notif.requestExactAlarmsPermission();
+  Future<bool> _checkPermissions() async {
+    try {
+      final hasNotificationPermission = await _notificationService
+          .requestPermission();
+      final hasExactAlarmsPermission = await _notificationService
+          .requestExactAlarmsPermission();
+      return hasNotificationPermission && hasExactAlarmsPermission;
+    } catch (e) {
+      debugPrint('Error checking permissions: $e');
+      return false;
+    }
+  }
+
+  Future<void> _scheduleIfNeeded() async {
+    try {
+      final pendingNotifications = await _notificationService
+          .getPendingNotifications();
+      final hasScheduledNotification = pendingNotifications.any(
+        (notification) => notification.id == _dailyNotificationId,
+      );
+
+      if (!hasScheduledNotification) {
+        await scheduleDailyLunchNotification();
+      }
+    } catch (e) {
+      debugPrint('Error scheduling notification: $e');
+    }
+  }
+
+  Future<bool> requestPermission() async {
+    _hasPermission = await _checkPermissions();
+    notifyListeners();
+    return _hasPermission;
   }
 
   Future<void> setEnabled(bool value) async {
-    _enabled = value;
-    await _prefs.setNotificationEnabled(value);
-    notifyListeners();
+    final previousState = _isEnabled;
 
-    if (value) {
-      await scheduleDaily0630();
-    } else {
-      await cancelDaily();
+    _isEnabled = value;
+    await _preferencesService.setNotificationEnabled(value);
+
+    if (value && !previousState) {
+      _hasPermission = await requestPermission();
+
+      if (_hasPermission) {
+        await scheduleDailyLunchNotification();
+      } else {
+        _isEnabled = false;
+        await _preferencesService.setNotificationEnabled(false);
+      }
+    } else if (!value && previousState) {
+      await cancelDailyNotification();
     }
+
+    notifyListeners();
   }
 
-  /// Jadwalkan harian 06:30. Konten statis; payload = 'random'.
-  Future<void> scheduleDaily0630() async {
-    await cancelDaily();
+  Future<void> scheduleDailyLunchNotification() async {
+    if (!await _checkPermissions()) {
+      debugPrint('Cannot schedule: missing permissions');
+      return;
+    }
 
-    // (opsional) jika ingin tampil big picture statis di notifikasi
-    String? bigPath;
+    await cancelDailyNotification();
+
+    final hour = _preferencesService.getNotificationHour();
+    final minute = _preferencesService.getNotificationMinute();
+
+    String? imagePath;
+    String restaurantId = 'random';
+    String restaurantName = 'Restaurant';
+    String restaurantCity = '';
+
     try {
-      final listResp = await _api.getRestaurantList();
-      final list = listResp.restaurants;
-      if (list.isNotEmpty) {
-        final rnd = Random();
-        final pick = list[rnd.nextInt(list.length)];
-        final pictureId = pick.pictureId;
+      final listResponse = await _apiService.getRestaurantList();
+      final restaurants = listResponse.restaurants;
+      if (restaurants.isNotEmpty) {
+        final random = Random();
+        final restaurant = restaurants[random.nextInt(restaurants.length)];
+
+        restaurantId = restaurant.id;
+        restaurantName = restaurant.name;
+        restaurantCity = restaurant.city;
+
+        final pictureId = restaurant.pictureId;
         if (pictureId.isNotEmpty) {
           final url =
               'https://restaurant-api.dicoding.dev/images/medium/$pictureId';
-          bigPath = await _downloadAndSave(url, 'daily_static.jpg');
+          imagePath = await _downloadAndSaveImage(url, 'daily_restaurant.jpg');
         }
       }
-    } catch (_) {
-      // abaikan jika gagal unduh gambar
+    } catch (e) {
+      throw Exception('Error getting image for notification: $e');
     }
 
-    await _notif.zonedScheduleDailyAtTime(
-      id: _dailyId,
-      title: 'Rekomendasi restoran hari ini',
-      body: 'Ketuk untuk melihat rekomendasi terbaru',
-      hour: 13,
-      minute: 17,
-      payload: 'random', // sentinel → di-listener akan fetch random terbaru
-      bigPictureFilePath: bigPath, // boleh null untuk notifikasi tanpa gambar
-    );
+    try {
+      await _notificationService.scheduleDailyAtTime(
+        id: _dailyNotificationId,
+        title: 'Rekomendasi Restoran untukmu hari ini',
+        body: restaurantCity.isNotEmpty
+            ? '$restaurantName - $restaurantCity'
+            : 'Tekan untuk melihat detailnya',
+        hour: hour,
+        minute: minute,
+        payload: restaurantId,
+        bigPictureFilePath: imagePath,
+      );
+
+      final pendingNotifications = await _notificationService
+          .getPendingNotifications();
+      final isScheduled = pendingNotifications.any(
+        (notification) => notification.id == _dailyNotificationId,
+      );
+
+      if (!isScheduled) {
+        debugPrint('Warning: Notification appears to be not scheduled');
+      } else {
+        debugPrint('Notification successfully scheduled for $hour:$minute');
+      }
+    } catch (e) {
+      debugPrint('Failed to schedule notification: $e');
+    }
   }
 
-  Future<void> cancelDaily() async {
-    await _notif.cancel(_dailyId);
+  Future<void> cancelDailyNotification() async {
+    await _notificationService.cancelNotification(_dailyNotificationId);
   }
 
-  Future<String> _downloadAndSave(String url, String fileName) async {
-    final dir = await getApplicationDocumentsDirectory();
-    final filePath = '${dir.path}/$fileName';
-    final resp = await http.get(Uri.parse(url));
+  Future<String> _downloadAndSaveImage(String url, String fileName) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final filePath = '${directory.path}/$fileName';
+    final response = await http.get(Uri.parse(url));
     final file = File(filePath);
-    await file.writeAsBytes(resp.bodyBytes);
+    await file.writeAsBytes(response.bodyBytes);
     return filePath;
   }
 
-  /// Preview sekarang: ambil random + tampilkan Big Picture.
-  Future<void> previewNow() async {
+  Future<void> showPreviewNotification() async {
     try {
-      // Fetch random restaurant
-      final listResp = await _api.getRestaurantList();
-      final list = listResp.restaurants;
-      if (list.isEmpty) return;
+      final listResponse = await _apiService.getRestaurantList();
+      final restaurants = listResponse.restaurants;
+      if (restaurants.isEmpty) return;
 
-      final rnd = Random();
-      final pick = list[rnd.nextInt(list.length)];
-      final id = pick.id; // String
-      final name = pick.name;
-      final city = pick.city;
-      final pictureId = pick.pictureId;
+      final random = Random();
+      final restaurant = restaurants[random.nextInt(restaurants.length)];
+      final id = restaurant.id;
+      final name = restaurant.name;
+      final city = restaurant.city;
+      final pictureId = restaurant.pictureId;
 
-      debugPrint("Preview notification with restaurant: $name (ID: $id)");
-
-      // Download image
-      Uint8List? bigBytes;
+      Uint8List? imageBytes;
       if (pictureId.isNotEmpty) {
         final url =
             'https://restaurant-api.dicoding.dev/images/medium/$pictureId';
-        final resp = await http.get(Uri.parse(url));
-        if (resp.statusCode == 200) {
-          bigBytes = resp.bodyBytes;
-          debugPrint("Downloaded image for notification");
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          imageBytes = response.bodyBytes;
         }
       }
 
-      // Show notification with restaurant ID as payload (same as scheduled)
-      await _notif.showBigPicture(
-        id: 99999,
-        title: 'Rekomendasi Restoran: $name', // Match scheduled title format
-        body: 'Restoran di $city - tap untuk detail', // More descriptive
-        bigPictureBytes: bigBytes,
-        payload: id, // Restaurant ID as payload for navigation
+      await _notificationService.showBigPicture(
+        id: 9000,
+        title: "Rekomendasi Restoran",
+        body: '$name - $city',
+        bigPictureBytes: imageBytes,
+        payload: id,
       );
-
-      debugPrint("Preview notification sent with payload: $id");
     } catch (e) {
-      debugPrint("Error showing preview notification: $e");
+      throw Exception('Failed to show preview notification: $e');
+    }
+  }
+
+  Future<void> updateNotificationTime(int hour, int minute) async {
+    if (_isEnabled && _hasPermission) {
+      await scheduleDailyLunchNotification();
     }
   }
 }

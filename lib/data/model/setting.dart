@@ -1,14 +1,27 @@
 class Setting {
   final bool notificationEnable;
   final bool isDarkTheme;
+  final int notificationHour;
+  final int notificationMinute;
 
-  Setting({required this.notificationEnable, required this.isDarkTheme});
+  Setting({
+    this.notificationEnable = false,
+    this.isDarkTheme = false,
+    this.notificationHour = 11,
+    this.notificationMinute = 0,
+  });
 
-  // Create copy object to override default setting values.
-  Setting copyWith({bool? notificationEnable, bool? isDarkTheme}) {
+  Setting copyWith({
+    bool? notificationEnable,
+    bool? isDarkTheme,
+    int? notificationHour,
+    int? notificationMinute,
+  }) {
     return Setting(
       notificationEnable: notificationEnable ?? this.notificationEnable,
       isDarkTheme: isDarkTheme ?? this.isDarkTheme,
+      notificationHour: notificationHour ?? this.notificationHour,
+      notificationMinute: notificationMinute ?? this.notificationMinute,
     );
   }
 }
