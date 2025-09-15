@@ -28,6 +28,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
+// TODO: Check clean code
+// TODO: Check tests
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
