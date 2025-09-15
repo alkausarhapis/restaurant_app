@@ -65,7 +65,7 @@ class MainScreen extends StatelessWidget {
                       : inactiveColor,
                 ),
               ),
-              label: 'Bookmarks',
+              label: 'Favorites',
             ),
             BottomNavigationBarItem(
               icon: Container(
