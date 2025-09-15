@@ -48,7 +48,6 @@ class LocalNotificationProvider extends ChangeNotifier {
           .requestExactAlarmsPermission();
       return hasNotificationPermission && hasExactAlarmsPermission;
     } catch (e) {
-      debugPrint('Error checking permissions: $e');
       return false;
     }
   }
@@ -65,7 +64,7 @@ class LocalNotificationProvider extends ChangeNotifier {
         await scheduleDailyLunchNotification();
       }
     } catch (e) {
-      debugPrint('Error scheduling notification: $e');
+      // Error handling
     }
   }
 
@@ -99,11 +98,9 @@ class LocalNotificationProvider extends ChangeNotifier {
 
   Future<void> scheduleDailyLunchNotification() async {
     if (!await _checkPermissions()) {
-      debugPrint('Cannot schedule: missing permissions');
       return;
     }
 
-    // Make sure to cancel any existing notification first
     await cancelDailyNotification();
 
     final hour = _preferencesService.getNotificationHour();
@@ -148,20 +145,8 @@ class LocalNotificationProvider extends ChangeNotifier {
         payload: restaurantId,
         bigPictureFilePath: imagePath,
       );
-
-      final pendingNotifications = await _notificationService
-          .getPendingNotifications();
-      final isScheduled = pendingNotifications.any(
-        (notification) => notification.id == _dailyNotificationId,
-      );
-
-      if (!isScheduled) {
-        debugPrint('Warning: Notification appears to be not scheduled');
-      } else {
-        debugPrint('Notification successfully scheduled for $hour:$minute');
-      }
     } catch (e) {
-      debugPrint('Failed to schedule notification: $e');
+      // Error handling
     }
   }
 
@@ -214,32 +199,11 @@ class LocalNotificationProvider extends ChangeNotifier {
   }
 
   Future<void> updateNotificationTime(int hour, int minute) async {
-    // First, ensure we have permissions
     _hasPermission = await _checkPermissions();
 
     if (_isEnabled && _hasPermission) {
-      // We need to explicitly cancel and reschedule for the time change to take effect
       await cancelDailyNotification();
       await scheduleDailyLunchNotification();
-
-      // Verify if the notification was scheduled correctly
-      final pendingNotifications = await _notificationService
-          .getPendingNotifications();
-      final isScheduled = pendingNotifications.any(
-        (notification) => notification.id == _dailyNotificationId,
-      );
-
-      if (isScheduled) {
-        debugPrint('Notification successfully rescheduled for $hour:$minute');
-      } else {
-        debugPrint(
-          'Warning: Failed to reschedule notification for $hour:$minute',
-        );
-      }
-    } else {
-      debugPrint(
-        'Cannot update notification time: notifications disabled or no permission',
-      );
     }
   }
 }
