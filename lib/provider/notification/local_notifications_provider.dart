@@ -103,6 +103,7 @@ class LocalNotificationProvider extends ChangeNotifier {
       return;
     }
 
+    // Make sure to cancel any existing notification first
     await cancelDailyNotification();
 
     final hour = _preferencesService.getNotificationHour();
@@ -213,8 +214,32 @@ class LocalNotificationProvider extends ChangeNotifier {
   }
 
   Future<void> updateNotificationTime(int hour, int minute) async {
+    // First, ensure we have permissions
+    _hasPermission = await _checkPermissions();
+
     if (_isEnabled && _hasPermission) {
+      // We need to explicitly cancel and reschedule for the time change to take effect
+      await cancelDailyNotification();
       await scheduleDailyLunchNotification();
+
+      // Verify if the notification was scheduled correctly
+      final pendingNotifications = await _notificationService
+          .getPendingNotifications();
+      final isScheduled = pendingNotifications.any(
+        (notification) => notification.id == _dailyNotificationId,
+      );
+
+      if (isScheduled) {
+        debugPrint('Notification successfully rescheduled for $hour:$minute');
+      } else {
+        debugPrint(
+          'Warning: Failed to reschedule notification for $hour:$minute',
+        );
+      }
+    } else {
+      debugPrint(
+        'Cannot update notification time: notifications disabled or no permission',
+      );
     }
   }
 }

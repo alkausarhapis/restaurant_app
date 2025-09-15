@@ -114,53 +114,59 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
 
             InkWell(
-              onTap: () => _selectTime(context),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.access_time,
-                      size: 30,
-                      color: Theme.of(context).colorScheme.inverseSurface,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Waktu notifikasi',
-                        style: Theme.of(context).textTheme.titleLarge,
+              onTap: currentNotifEnabled ? () => _selectTime(context) : null,
+              child: Opacity(
+                opacity: currentNotifEnabled ? 1.0 : 0.5,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.access_time,
+                        size: 30,
+                        color: Theme.of(context).colorScheme.inverseSurface,
                       ),
-                    ),
-                    Text(
-                      currentTime,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.arrow_forward_ios, size: 16),
-                  ],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Waktu notifikasi',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                      ),
+                      Text(
+                        currentTime,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.arrow_forward_ios, size: 16),
+                    ],
+                  ),
                 ),
               ),
             ),
 
             InkWell(
-              onTap: _showPreviewNotification,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.notification_important_outlined,
-                      size: 30,
-                      color: Theme.of(context).colorScheme.inverseSurface,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Tes Notifikasi',
-                        style: Theme.of(context).textTheme.titleLarge,
+              onTap: currentNotifEnabled ? _showPreviewNotification : null,
+              child: Opacity(
+                opacity: currentNotifEnabled ? 1.0 : 0.5,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.notification_important_outlined,
+                        size: 30,
+                        color: Theme.of(context).colorScheme.inverseSurface,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Tes Notifikasi',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -172,6 +178,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _selectTime(BuildContext context) async {
     final preferencesProvider = context.read<SharedPreferencesProvider>();
+    if (!preferencesProvider.isNotificationEnabled) return;
+
     final notificationProvider = context.read<LocalNotificationProvider>();
     final currentHour = preferencesProvider.notificationHour;
     final currentMinute = preferencesProvider.notificationMinute;
@@ -224,12 +232,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _showPreviewNotification() async {
+    final preferencesProvider = context.read<SharedPreferencesProvider>();
+    if (!preferencesProvider.isNotificationEnabled) return;
+
     await context.read<LocalNotificationProvider>().requestPermission();
 
     if (!mounted) return;
     await context.read<LocalNotificationProvider>().showPreviewNotification();
 
-    if (!mounted) return;
     _showSnack('Preview notifikasi dikirim');
   }
 }
