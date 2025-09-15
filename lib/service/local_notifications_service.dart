@@ -25,6 +25,12 @@ class LocalNotificationsService {
           selectNotificationStream.add(payload);
         }
       },
+      onDidReceiveBackgroundNotificationResponse: (resp) {
+        final payload = resp.payload;
+        if (payload != null && payload.isNotEmpty) {
+          selectNotificationStream.add(payload);
+        }
+      },
     );
 
     const channel = AndroidNotificationChannel(
@@ -117,6 +123,8 @@ class LocalNotificationsService {
     String? bigPictureFilePath,
     Uint8List? largeIconBytes,
   }) async {
+    await configureLocalTimeZone();
+
     final now = tz.TZDateTime.now(tz.local);
     var scheduledTime = tz.TZDateTime(
       tz.local,

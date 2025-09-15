@@ -102,14 +102,18 @@ void main() async {
         ),
         ChangeNotifierProvider(create: (context) => IndexNavProvider()),
       ],
-      child: MainApp(initialRoute: initialRoute),
+      child: MainApp(
+        initialRoute: initialRoute,
+        initialPayload: initialPayload,
+      ),
     ),
   );
 }
 
 class MainApp extends StatefulWidget {
-  const MainApp({super.key, required this.initialRoute});
+  const MainApp({super.key, required this.initialRoute, this.initialPayload});
   final String initialRoute;
+  final String? initialPayload;
 
   @override
   State<MainApp> createState() => _MainAppState();
@@ -123,20 +127,27 @@ class _MainAppState extends State<MainApp> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.initialPayload != null) {
+        final payloadProvider = context.read<PayloadProvider>();
+        payloadProvider.payload = widget.initialPayload;
+      }
+
       _notificationSubscription = selectNotificationStream.stream.listen((
         String? payload,
       ) async {
         if (!mounted) return;
         final payloadProvider = context.read<PayloadProvider>();
 
-        payloadProvider.payload = payload;
+        if (payload != null && payload.isNotEmpty) {
+          payloadProvider.payload = payload;
 
-        if (payload == null || !mounted) return;
-
-        navigatorKey.currentState?.pushNamed(
-          NavigationRoute.detailRoute.name,
-          arguments: payload,
-        );
+          if (payload != "random") {
+            navigatorKey.currentState?.pushNamed(
+              NavigationRoute.detailRoute.name,
+              arguments: payload,
+            );
+          }
+        }
       });
     });
   }
@@ -167,11 +178,15 @@ class _MainAppState extends State<MainApp> {
             NavigationRoute.favoriteRoute.name: (context) =>
                 const FavoriteScreen(),
             NavigationRoute.detailRoute.name: (context) {
-              final args = ModalRoute.of(context)?.settings.arguments;
-              if (args == null) {
+              final args =
+                  ModalRoute.of(context)?.settings.arguments as String?;
+              final payloadProvider = context.read<PayloadProvider>();
+              final restaurantId = args ?? payloadProvider.payload;
+
+              if (restaurantId == null || restaurantId == 'random') {
                 return const MainScreen();
               }
-              return DetailScreen(restaurantId: args as String);
+              return DetailScreen(restaurantId: restaurantId);
             },
             NavigationRoute.searchRoute.name: (context) => const SearchScreen(),
             NavigationRoute.addReviewRoute.name: (context) =>
