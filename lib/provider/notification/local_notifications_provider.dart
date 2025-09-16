@@ -48,7 +48,7 @@ class LocalNotificationProvider extends ChangeNotifier {
           .requestExactAlarmsPermission();
       return hasNotificationPermission && hasExactAlarmsPermission;
     } catch (e) {
-      return false;
+      throw Exception('Error checking notification permissions: $e');
     }
   }
 
@@ -64,7 +64,7 @@ class LocalNotificationProvider extends ChangeNotifier {
         await scheduleDailyLunchNotification();
       }
     } catch (e) {
-      throw Exception('Error checking scheduled notifications: $e');
+      throw Exception('Error scheduling notification if needed: $e');
     }
   }
 
