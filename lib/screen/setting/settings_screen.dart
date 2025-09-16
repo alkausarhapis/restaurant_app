@@ -21,156 +21,161 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'Pengaturan',
-                style: Theme.of(context).textTheme.displayMedium,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            InkWell(
-              onTap: () {},
-              child: Padding(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
                 padding: const EdgeInsets.all(16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.format_paint,
-                      size: 30,
-                      color: Theme.of(context).colorScheme.inverseSurface,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Tema',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                    ),
-                    const SizedBox(width: 64),
-                    Expanded(
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<bool>(
-                          value: currentIsDark,
-                          items: const [
-                            DropdownMenuItem(
-                              value: false,
-                              child: Text('Light'),
-                            ),
-                            DropdownMenuItem(value: true, child: Text('Dark')),
-                          ],
-                          onChanged: (value) async {
-                            if (value == null) return;
-                            context.read<ThemeProvider>().setMode(
-                              value ? ThemeMode.dark : ThemeMode.light,
-                            );
-                            await context
-                                .read<SharedPreferencesProvider>()
-                                .setDarkMode(value);
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'Pengaturan',
+                  style: Theme.of(context).textTheme.displayMedium,
                 ),
               ),
-            ),
+              const SizedBox(height: 16),
 
-            InkWell(
-              onTap: () async {
-                final next = !currentNotifEnabled;
-                await _toggleNotification(next);
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.notifications_active,
-                      size: 30,
-                      color: Theme.of(context).colorScheme.inverseSurface,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Notifikasi',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                    ),
-                    Switch.adaptive(
-                      value: currentNotifEnabled,
-                      onChanged: (value) async {
-                        await _toggleNotification(value);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            InkWell(
-              onTap: currentNotifEnabled ? () => _selectTime(context) : null,
-              child: Opacity(
-                opacity: currentNotifEnabled ? 1.0 : 0.5,
+              InkWell(
+                onTap: () {},
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Icon(
-                        Icons.access_time,
+                        Icons.format_paint,
                         size: 30,
                         color: Theme.of(context).colorScheme.inverseSurface,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Waktu notifikasi',
+                          'Tema',
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                       ),
-                      Text(
-                        currentTime,
-                        style: Theme.of(context).textTheme.titleMedium,
+                      const SizedBox(width: 64),
+                      Expanded(
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<bool>(
+                            value: currentIsDark,
+                            items: const [
+                              DropdownMenuItem(
+                                value: false,
+                                child: Text('Light'),
+                              ),
+                              DropdownMenuItem(
+                                value: true,
+                                child: Text('Dark'),
+                              ),
+                            ],
+                            onChanged: (value) async {
+                              if (value == null) return;
+                              context.read<ThemeProvider>().setMode(
+                                value ? ThemeMode.dark : ThemeMode.light,
+                              );
+                              await context
+                                  .read<SharedPreferencesProvider>()
+                                  .setDarkMode(value);
+                            },
+                          ),
+                        ),
                       ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.arrow_forward_ios, size: 16),
                     ],
                   ),
                 ),
               ),
-            ),
 
-            InkWell(
-              onTap: currentNotifEnabled ? _showPreviewNotification : null,
-              child: Opacity(
-                opacity: currentNotifEnabled ? 1.0 : 0.5,
+              InkWell(
+                onTap: () async {
+                  final next = !currentNotifEnabled;
+                  await _toggleNotification(next);
+                },
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
                       Icon(
-                        Icons.notification_important_outlined,
+                        Icons.notifications_active,
                         size: 30,
                         color: Theme.of(context).colorScheme.inverseSurface,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Tes Notifikasi',
+                          'Notifikasi',
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
+                      ),
+                      Switch.adaptive(
+                        value: currentNotifEnabled,
+                        onChanged: (value) async {
+                          await _toggleNotification(value);
+                        },
                       ),
                     ],
                   ),
                 ),
               ),
-            ),
-          ],
+
+              InkWell(
+                onTap: currentNotifEnabled ? () => _selectTime(context) : null,
+                child: Opacity(
+                  opacity: currentNotifEnabled ? 1.0 : 0.5,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.access_time,
+                          size: 30,
+                          color: Theme.of(context).colorScheme.inverseSurface,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Waktu notifikasi',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ),
+                        Text(
+                          currentTime,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.arrow_forward_ios, size: 16),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              InkWell(
+                onTap: currentNotifEnabled ? _showPreviewNotification : null,
+                child: Opacity(
+                  opacity: currentNotifEnabled ? 1.0 : 0.5,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.notification_important_outlined,
+                          size: 30,
+                          color: Theme.of(context).colorScheme.inverseSurface,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Tes Notifikasi',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

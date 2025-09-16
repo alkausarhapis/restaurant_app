@@ -64,7 +64,7 @@ class LocalNotificationProvider extends ChangeNotifier {
         await scheduleDailyLunchNotification();
       }
     } catch (e) {
-      // Error handling
+      throw Exception('Error checking scheduled notifications: $e');
     }
   }
 
@@ -146,7 +146,7 @@ class LocalNotificationProvider extends ChangeNotifier {
         bigPictureFilePath: imagePath,
       );
     } catch (e) {
-      // Error handling
+      throw Exception('Error scheduling notification: $e');
     }
   }
 
