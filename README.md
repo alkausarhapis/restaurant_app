@@ -2,8 +2,6 @@
 
 Aplikasi Flutter untuk menampilkan daftar restoran, detail restoran, pencarian, dan fitur ulasan dengan data dari [Restaurant API Dicoding](https://restaurant-api.dicoding.dev/).
 
-> [Download demo apk disini](https://drive.google.com/file/d/1p3M9NXiilfFHx30Uht_z8_fZ1V9q2mXf/view?usp=sharing)
-
 ## ✨ Features
 
 ### **Daftar Restoran 📃**
@@ -11,6 +9,11 @@ Aplikasi Flutter untuk menampilkan daftar restoran, detail restoran, pencarian, 
 - Menampilkan list restoran dari API.
 - Informasi utama: nama, gambar, kota, dan rating.
 - Indikator loading saat fetch data.
+
+### **Restoran Favorit ⭐**
+
+- Menampilkan list favorit restoran dari Sqflite.
+- Menambahkan & menghapus restoran favorit dari detail screen.
 
 ### **Detail Restoran 🍽️**
 
@@ -58,3 +61,7 @@ Aplikasi Flutter untuk menampilkan daftar restoran, detail restoran, pencarian, 
 - Tema terang & gelap + custom font/color ✅
 - Error handling & indikator loading ✅
 - State management dengan Provider & sealed class ✅
+- Membuat halaman favorit restoran (new)
+- Membuat pengaturan tema (new)
+- Membuat fitur daily reminder dengan timezone (new)
+- Unit testing & widget testing (new)
